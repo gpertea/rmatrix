@@ -45,7 +45,6 @@ function App() {
         </div>
        <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">
-          <h4 style={{marginLeft: "-3.6rem"}}>Region Matrix</h4>
           <DataCtxProvider>
            <RMatrix />
           </DataCtxProvider>

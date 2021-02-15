@@ -14,14 +14,18 @@ const clHdrSelFg='#A00';
 
 function jqFillMatrix(xt, rd) {
  //populate top header 
- $('#rxMatrix > thead > tr').append(
+ let th=$('#rxMatrix > thead');
+ th.empty();
+ th.append('<tr><th class="cr" style="width:8rem;"></th>'+
     $.map(xt, function(xt) { 
        return '<th class="rt"><div><span>'+xt+'</span></div></th>';
-    }).join());
+    }).join()+'</tr>');
     //populate rows:
-    $('#rxMatrix > tbody').append(
+let tb= $('#rxMatrix > tbody');
+tb.empty();
+tb.append(
       $.map(rd, function(r, i) { 
-        return '<tr> <th>'+r.name+'</th>'+
+        return '<tr><th>'+r.name+'</th>'+
            $.map(xt, function(x,j) {
              var v=0;
              if (j>0) { //generate randomly
@@ -33,10 +37,10 @@ function jqFillMatrix(xt, rd) {
              }
              if (v==0) v='';
              return '<td>'+v+'</td>';
-           }).join() + " </tr>\n";
+           }).join() + "</tr>\n";
      }).join());
      // now iterate through all cells to record their original color values
-     $('#rxMatrix td').each(function() {
+$('#rxMatrix td').each(function() {
          var v=$(this).html();
          if (v>0) {
           var psh=v/(mxMaxVal*4.1); 
@@ -47,14 +51,14 @@ function jqFillMatrix(xt, rd) {
            $(this).prop('ofg',fg);
            $(this).css('color', fg);
          }
-     }); 
+  }); 
 }
 
 function jqRender(dtypes, rdata) {
     globvar++;
     if (selregs.length===0) 
-    for (var i=0;i<rdata.length;i++) selregs.push(0);
-    console.log("jquery Rendering call "+globvar);
+       for (var i=0;i<rdata.length;i++) selregs.push(0);
+    console.log("jquery Rendering call "+globvar + " (number of rows: "+ rdata.length+")");
     jqFillMatrix(dtypes, rdata); //get data and fill matrix
     //populateFilter('fltDx', dtaDx); //populate Diagnosis filter
     //populateFilter('fltRace', dtaRace); //populate Diagnosis filter
@@ -153,7 +157,7 @@ export default function RMatrix() {
           <h4 style={{marginLeft: "-2.4em"}}>Region Matrix</h4>
           <table id="rxMatrix">
             <thead>
-              <tr></tr>
+              
             </thead>
             <tbody>
             </tbody>
