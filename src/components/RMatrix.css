@@ -1,0 +1,90 @@
+#rxMatrix {
+    text-align: left;
+    /* margin-top: 2em; */
+    padding-right: 0.2em;
+    border-collapse: collapse;
+   }
+   
+   #rxMatrix th {
+     font-size: 0.92rem;
+     font-weight: 600;
+     color: #999;
+     letter-spacing: 0.05em;
+     padding: 0 4px;
+     /* padding-right:0.2em; */
+     text-align: right;
+     border-left: none;
+   }
+   
+   #rxMatrix th.xt {
+     text-align: left;
+     border-left: none;
+     height: 140px;
+     white-space: nowrap;
+   }
+   
+   #rxMatrix th.xt > div {
+     transform: 
+       /* Magic Numbers */
+       translate(14px, 50px)
+       /* 45 is really 360 - 45 */
+       rotate(315deg);
+     width: 36px;
+   }
+   
+   #rxMatrix th.xt > div > span {
+     text-align: left; 
+     /* background-color: chartreuse; */
+     padding: 2px 4px;
+     margin-left:-6px;
+   }
+   
+   /* another way to rotate */
+   #rxMatrix th.rt {
+     white-space: nowrap;
+     position: relative;
+   }
+   
+   #rxMatrix th.rt > div {
+     /* place div at bottom left of the th parent */
+     position: absolute;
+     bottom: 0;
+     left: 0;
+   
+     /* Make sure short setting names still meet the corner of the parent otherwise you'll get a gap */
+     text-align: left;
+     /* Move the top left corner of the span bottom-border to line up with the top left corner of the td border-right border so that the border corners are matched */
+     /* Rotate -45 degrees about matched border corners */
+     transform: 
+       translate(calc(75% - 0.5px), 1px)
+       rotate(320deg);
+     transform-origin: 0% calc(100% - 1px);
+     /* border:1px solid #ddd; */
+     width: 100%;
+   }
+   #rxMatrix th.rt > div > span {
+     /* make sure the bottom of the span is matched up with the bottom of the parent div */
+     position: absolute;
+     bottom: 0;
+     left: 0;
+     padding: 0 0.6em 0.2em 0.3em;
+     margin-left:-0.6em;
+     border-bottom-left-radius: 12px 12px;
+     /* border-bottom: 1px solid #ddd; */
+   }
+   
+   
+   #rxMatrix td {
+     background-color: white;
+     color:brown;
+     min-width: 3em;
+     padding-top: 2px;
+     text-align: center;
+     border: 1px solid #eee;
+     cursor: pointer;
+   }
+   
+   #rxMatrix .cr {
+     border-top: none;
+   }
+   
