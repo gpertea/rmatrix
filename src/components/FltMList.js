@@ -3,7 +3,7 @@ import './FltMList.css'
 
 function FltMList( props ) {
     return (
-        <div class="row" style={{marginLeft:"1.4rem"}}>
+        <div className="row" style={{marginLeft:"1.4rem"}}>
            {props.id} 
         </div>
     )
