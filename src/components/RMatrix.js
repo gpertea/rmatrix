@@ -6,7 +6,8 @@ import * as gu from './gutils'
 
 var globvar=0;
 var selcol=0;
-var selregs=[]; 
+var selregs=[];
+var mxVals=[]; //array with counts (assay_types x regions)
 var mxMaxVal = 146; //maximum value in the matrix (for shading)
 const clShadeHover='#FFF4F4';
 const clShadeHoverRGB='rgb(255,240,240)';
@@ -35,7 +36,8 @@ tb.append(
              } else {
                v=r.num;
              }
-             if (v==0) v='';
+             mxVals[i][j]=v;
+             if (v===0) v='';
              return '<td>'+v+'</td>';
            }).join() + "</tr>\n";
      }).join());
@@ -55,81 +57,21 @@ $('#rxMatrix td').each(function() {
 }
 
 function jqRender(dtypes, rdata) {
+    //this should only be called when matrix data is refereshed (dtypes or rdata change)
     globvar++;
-    if (selregs.length===0) 
-       for (var i=0;i<rdata.length;i++) selregs.push(0);
-    console.log("jquery Rendering call "+globvar + " (number of rows: "+ rdata.length+")");
+    selregs=[];
+    for (var i=0;i<rdata.length;i++) {
+        selregs.push(0);
+        mxVals[i]=Array(dtypes.length).fill(0);
+    }
+    console.log("jquery Rendering call "+ globvar + " (number of rows: "+ rdata.length+")");
     jqFillMatrix(dtypes, rdata); //get data and fill matrix
-    //populateFilter('fltDx', dtaDx); //populate Diagnosis filter
-    //populateFilter('fltRace', dtaRace); //populate Diagnosis filter
-    //populateFilter('fltDataset', dtaDataset); //populate Diagnosis filter
-    //populateFilter('fltSex', dtaSex); //populate Diagnosis filter
-    //populateFilter('fltProto', dtaProtocol); //populate Diagnosis filter
 
     //matrix hover behavior
     $("#rxMatrix td").hover(function()  {
-        var t=$(this);
-        t.siblings('td').each(function() {
-          var td=$(this);
-          var coln = td.index(); // 1-based !
-          var ridx =  td.parent().index();
-           tdHighlight(td, ridx, coln);
-        });
-        var th=t.siblings('th');
-        if (selregs[t.parent().index()]) {
-          th.css('background-color', clShadeHover);
-          th.css('color', clHdrSelFg);
-        } else { //regular, not selected region
-          th.css('background-color', clShadeHover);
-          th.css('color', '#222');
-        }
-
-        var ind = t.index()+1;
-        //$('#rxMatrix td:nth-child(' + ind + ')').css('background-color', shadeCl);
-        $('#rxMatrix td:nth-child(' + ind + ')').each( function() {
-          var td=$(this);
-          tdHighlight(td, td.parent().index(), td.index());
-        });
-        //t.css('background-color','#FFFFEE');
-        tdHighlight(t, t.parent().index(), ind-1);
-        //find the span inside the div
-        var ch=$('#rxMatrix th:nth-child(' + ind + ') > div > span');
-        if (ind-1===selcol) {
-          ch.css('color', clHdrSelFg);
-          ch.css('font-weight', 'bold');
-        } else {
-          ch.css('color', '#222');
-          ch.css('font-weight', '600');
-        }
-      }, function() {
-        var t=$(this);
-        //t.siblings('td').css('background-color', ''); 
-        t.siblings('td').each( function() {
-          var td=$(this);
-          tdColRestore(td, td.parent().index(), td.index());
-        });
-
-        var th=t.siblings('th');
-        if (selregs[t.parent().index()]) {
-          th.css('color', clHdrSelFg); 
-          th.css('background-color', ''); 
-        } else {
-           th.css('color', ''); 
-           th.css('background-color', ''); 
-        }
-        var ind = t.index()+1;
-        //$('#rxMatrix td:nth-child(' + ind + ')').css('background-color', ''); 
-        $('#rxMatrix td:nth-child(' + ind + ')').each( function() {
-          var td=$(this);
-          tdColRestore(td, td.parent().index(), td.index());
-        });
-        var ch=$('#rxMatrix th:nth-child(' + ind + ') > div > span');
-        if (ind-1==selcol) {
-          ch.css('color', clHdrSelFg);
-          ch.css('font-weight', 'bold');
-        } else {
-          ch.css('color', '');
-        }
+        handleHover($(this), 0);
+      }, function() { 
+        handleHover($(this), 1);
       });
 
       $("#rxMatrix td").click( function() {
@@ -138,7 +80,7 @@ function jqRender(dtypes, rdata) {
         var rowidx =  t.parent().index();
         if (selcol>0 && selcol!=coln) return; //ignore click outside the allowed column
         if (selregs[rowidx]) deselectCell(t, rowidx);
-                        else selectCell(t, coln, rowidx);
+                        else selectCell(t, rowidx, coln);
         
         //console.log("Text for selected cell is: "+$t.text()+ " with col index "+colidx+ " and row index "+rowidx);
         //glog("Text for selected cell is: ["+t.text()+ "] with col num "+coln+ " and row index "+rowidx+" (selregs["+rowidx+"]="+selregs[rowidx]+")");
@@ -146,6 +88,40 @@ function jqRender(dtypes, rdata) {
       });
 
 }
+
+function handleHover(t, out) {
+  var cix = t.index(); //column index
+  var rix = t.parent().index(); //row index
+  //highlight row
+  t.siblings('td').each(function() {
+      var td=$(this);
+      var c=td.index();
+      if (c!==selcol || !selregs[rix])
+      hoverCell(td, rix, c, out);
+  });
+  if (selregs[rix]) selectTH(t.siblings('th'))
+  else hoverTH(t.siblings('th'), out) //regular, not selected region
+ 
+  // highlight column, unless locked on one
+  if (selcol===0 || selcol===cix) {
+    $('#rxMatrix td:nth-child(' + (cix+1) + ')').each( function() {
+        var td=$(this);
+        var r=td.parent().index();
+        if (cix!==selcol || !selregs[r])
+          hoverCell(td, r, cix, out);
+    });
+    if (cix!==selcol || !selregs[rix])
+      hoverCell(t, t.parent().index(), cix, out);
+    //highlight column
+    var ch=$('#rxMatrix th:nth-child(' + (cix+1) + ') > div > span');
+    if (cix===selcol) {
+        selectTH(ch);
+    } else {
+        hoverTH(ch, out);
+    }
+  }
+}
+
 
 export default function RMatrix() {
     const [dtypes, rdata] = useContext(DataCtx);
@@ -169,7 +145,27 @@ export default function RMatrix() {
 
 //--- jquery utility functions
 
-function selectCell(t, cnum, ridx) {
+function selectTH(th) {
+    th.css('color', clHdrSelFg); //dark grey
+    th.css('font-weight', 'bold'); //semi-bold
+}
+function deselectTH(th) {
+    th.css('color', '#222'); //dark grey
+    th.css('font-weight', '600'); //semi-bold
+}
+
+function hoverTH(th, out) {
+  if (out) {
+    th.css('color', ''); 
+    th.css('background-color', ''); 
+    th.css('font-weight', '600');
+  } else {
+    th.css('color', '#222');
+    th.css('font-weight', '600');
+  }
+}
+
+function selectCell(t, ridx, cnum) {
     if (t.html().trim().length===0) return;
     t.css('font-weight','bold');
     t.css('color', '#fff');
@@ -179,14 +175,12 @@ function selectCell(t, cnum, ridx) {
     th.css('font-weight', 'bold');
     selregs[ridx]=1;
     if (selcol===0) {
-      var ind=cnum+1;
-      var ch=$('#rxMatrix th:nth-child(' + ind + ') > div > span');
-      ch.css('color', clHdrSelFg);
-      ch.css('font-weight', 'bold');
-      selcol=cnum;
+        selectTH($('#rxMatrix th:nth-child(' + (cnum+1) + ') > div > span'))
+        selcol=cnum;
     }
+    console.log("selected @ col "+cnum+", row "+ridx+" : "+mxVals[ridx][cnum-1]+", selcol="+cnum);
   }
-  
+
   function deselectCell(t, ridx) {
     t.css('font-weight','normal');
     var obg=t.prop('obg');
@@ -195,41 +189,35 @@ function selectCell(t, cnum, ridx) {
     if (obg) t.css('background-color', obg);
     
     selregs[ridx]=0;
-    var th=t.siblings('th')
-    th.css('color', '#222');
-    th.css('font-weight', '600');
+    deselectTH(t.siblings('th'));
     var sel=0;
     for (let i=0;i<selregs.length;i++) {
       if (selregs[i]) { sel=1; break; }
     }
-    if (sel===0) {
-      //deselect column
-      if (selcol) {
-        var ind=selcol+1;
-        var ch=$('#rxMatrix th:nth-child(' + ind + ') > div > span');
-        ch.css('color', '#222');
-        ch.css('font-weight', '600');
-      }
+    if (sel===0) { //deselect whole column
+      if (selcol)  
+        deselectTH($('#rxMatrix th:nth-child(' + (selcol+1) + ') > div > span'));
       selcol=0;
     }
   }
   
-  function tdHighlight(t) {
-    var obg=t.prop('obg');
-    if (obg) {
-      var nc=gu.blendRGBColors(obg, clShadeHoverRGB, 0.1);
-      t.css('background-color', nc );
+  function hoverCell(t, r, c, out) {
+    if (out) {
+       var obg=t.prop('obg');
+       if (obg) {
+          t.css('background-color', obg);
+       }
+       else t.css('background-color', '');
+    } else {
+        var obg=t.prop('obg');
+        if (obg) {
+        var nc=gu.blendRGBColors(obg, clShadeHoverRGB, 0.1);
+        t.css('background-color', nc );
+        }
+        else t.css('background-color', clShadeHover);
     }
-    else t.css('background-color', clShadeHover);
   }
   
-  function tdColRestore(t) {
-    var obg=t.prop('obg');
-    if (obg) {
-       t.css('background-color', obg);
-    }
-    else t.css('background-color', '');
-  }
 
 
 

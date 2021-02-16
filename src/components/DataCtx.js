@@ -1,7 +1,7 @@
 import { createContext, useState } from "react";
 
-const dtaXTypes=[ 'RNA-seq', 'long read RNA-seq', 'scRNA-seq', 'micro RNA-seq',
-  'WGS', 'WGBS', 'ATAC-seq' ];
+const dtaXTypes=[ 'RNA-seq', 'DNA methylation', 'long read RNA-seq', 'scRNA-seq', 'micro RNA-seq',
+  'WGS', 'ATAC-seq' ];
 
 const dtaRegion = [{"id":1,"name":"Amygdala","num":548}, 
   {"id":2,"name":"BasoAmyg","num":318}, 
