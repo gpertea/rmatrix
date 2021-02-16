@@ -28,7 +28,6 @@ const DataCtx = createContext();
 
 function DataCtxProvider({ children }) {
 
-
   const [mxData, setMxData] = useState ( () => fetchData() );
   
   return (

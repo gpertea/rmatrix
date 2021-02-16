@@ -2,11 +2,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 //import $ from 'jquery';
 //import Popper from 'popper.js';
 //import 'bootstrap/dist/js/bootstrap.bundle.min';
-import React from 'react';
+import React, {useState} from 'react';
 import './App.css';
 import RMatrix from './components/RMatrix';
+import RSelTotal from './components/RSelTotal';
+
 import FltMList from './components/FltMList';
 import {DataCtxProvider} from './components/DataCtx';
+import {RSelProvider} from './components/RSelCtx';
+
 
 function Header() {
   return(
@@ -20,7 +24,25 @@ function Header() {
   )
 }
 
+var rSelCol=0;
+var rSelRegs=[]; 
+var rMxVals=[];
+
+var selRegsStr="";
+
 function App() {
+  // [ selcol, selregs[], mxVals[][] ]
+  const [change, setChange] = useState( false) ;
+
+  function onRSelChange(r) { 
+    if (r.length!==3) return;
+    [ rSelCol, rSelRegs, rMxVals] = r;
+    console.log("selection change! selCol="+rSelCol);
+    selRegsStr="";
+    for (let i=0;i<rSelRegs.length;i++) selRegsStr+=rSelRegs[i];
+    console.log("    App selRegsStr: "+selRegsStr);
+  }
+  
   return (
     <>
     <div className="container-fluid"> 
@@ -42,14 +64,24 @@ function App() {
           <div className="row"> 
             <FltMList id="filterDataset" />
           </div> 
+          <div className="row"> 
+            <button onClick={()=>setChange(change=>!change)}>Render ALL</button>
+          </div>
         </div>
        <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">
           <DataCtxProvider>
-           <RMatrix />
+          <RSelProvider>
+             <RMatrix onSelChange={ onRSelChange }/>
+             <RSelTotal />
+           </RSelProvider>
           </DataCtxProvider>
+          
         </div>
-        <br/> <br/> <br/> <br/>
+
+        <br/> <br/> <br/> 
+        <span>{rSelRegs.map( (v) => v+"nbsp;")} </span>
+        <br/>
         </div>
     </div>
   </div> 
