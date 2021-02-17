@@ -7,13 +7,14 @@
    
    #rxMatrix th {
      font-size: 0.92rem;
-     font-weight: 600;
+     font-weight: bold;
      color: #999;
      letter-spacing: 0.05em;
      padding: 0 4px;
      /* padding-right:0.2em; */
      text-align: right;
      border-left: none;
+     cursor: pointer;
    }
    
    #rxMatrix th.xt {

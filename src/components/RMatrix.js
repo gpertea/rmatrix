@@ -44,15 +44,18 @@ tb.append(
      }).join());
      // now iterate through all cells to record their original color values
 $('#rxMatrix td').each(function() {
-         var v=$(this).html();
+         let t=$(this);
+         let v=t.html();
          if (v>0) {
-          var psh=v/(mxMaxVal*4.1); 
-          var bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
-          var fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
-           $(this).prop('obg', bc);
-           $(this).css('background-color', bc);
-           $(this).prop('ofg',fg);
-           $(this).css('color', fg);
+          let psh=v/(mxMaxVal*4.1); 
+          let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
+          let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
+          t.prop('obg', bc);
+          t.css('background-color', bc);
+          t.prop('ofg',fg);
+          t.css('color', fg);
+         } else { 
+           t.css('cursor', 'default');
          }
   }); 
 }
@@ -86,13 +89,42 @@ function RMatrix({ props }) {
           var t=$(this);
           var coln = t.index(); // 1-based !
           var rowidx =  t.parent().index();
-          if (selcol>0 && selcol!=coln) return; //ignore click outside the allowed column
-          if (selregs[rowidx]) deselectCell(t, rowidx);
+          if (selcol>0 && selcol!==coln) return; //ignore click outside the allowed column
+          if (selregs[rowidx]) deselectCell(t, rowidx, coln);
                           else selectCell(t, rowidx, coln);
           
           //console.log("Text for selected cell is: "+$t.text()+ " with col index "+colidx+ " and row index "+rowidx);
           //glog("Text for selected cell is: ["+t.text()+ "] with col num "+coln+ " and row index "+rowidx+" (selregs["+rowidx+"]="+selregs[rowidx]+")");
           //alert("Text: "+$t.text());
+        });
+        $("#rxMatrix th").hover( function()  {
+          handleTHover($(this), 0);
+        }, function() {
+          handleTHover($(this), 1);
+        });
+
+        //top header click behavior: toggle select/deselect all
+        $("#rxMatrix th").click( function() {
+          let t=$(this);
+          let cix=t.index();
+          if (t.hasClass("rt")) { // assay type header click
+             if (selcol>0 && selcol!==cix) return;
+             if (selcol>0) {
+               for (let r=0;r<selregs.length;r++) {
+                       if (selregs[r]>0) {
+                            deselectCell(null, r, cix, 1);
+                       }
+               }
+             } else { //select all
+              for (let r=0;r<selregs.length;r++) {
+                     selectCell(null, r, cix, 1);
+              } 
+            }
+            updateRSel();
+          } else { // region header
+            let rix=t.parent().index();
+            if (selcol>0 && selregs[rix]) return;
+          }
         });
 
   }
@@ -104,7 +136,18 @@ function RMatrix({ props }) {
     setSelData([selcol, selregs, mxVals]);
   }
 
-//--- jquery utility functions
+  //--- jquery utility functions
+  function handleTHover(t, out) {
+    if (t.hasClass("rt")) {
+      if (selcol>0) return;
+    } else {
+      //region hover
+      let rix=t.parent().index();
+      if (selcol>0 && selregs[rix]) return;
+    }
+    hoverTH(t, out);
+  }
+
   function handleHover(t, out) {
     var cix = t.index(); //column index
     var rix = t.parent().index(); //row index
@@ -113,7 +156,7 @@ function RMatrix({ props }) {
         var td=$(this);
         var c=td.index();
         if (c!==selcol || !selregs[rix])
-        hoverCell(td, rix, c, out);
+          hoverCell(td, rix, c, out);
     });
     if (selregs[rix]) selectTH(t.siblings('th'))
     else hoverTH(t.siblings('th'), out) //regular, not selected region
@@ -139,43 +182,56 @@ function RMatrix({ props }) {
   }
 
   function selectTH(th) {
-    th.css('color', clHdrSelFg); //dark grey
-    th.css('font-weight', 'bold'); //semi-bold
+    if (th.hasClass("rt")) {
+       th.css('color', clHdrSelFg); 
+    }  else {
+      th.css('color', '#fff');
+      th.css('background-color', clHdrSelFg);
+    }
   }
+
   function deselectTH(th) {
-    th.css('color', '#222'); //dark grey
-    th.css('font-weight', '600'); //semi-bold
+      th.css('color', ''); 
+      th.css('background-color', '');
   }
 
   function hoverTH(th, out) {
     if (out) {
       th.css('color', ''); 
       th.css('background-color', ''); 
-      th.css('font-weight', '600');
     } else {
       th.css('color', '#222');
-      th.css('font-weight', '600');
     }
   }
 
-  function selectCell(t, ridx, cnum) {
-    if (t.html().trim().length===0) return;
+  function selectCell(t, ridx, cix, noupd) {
+    if (t==null) {
+      t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
+      if (t  && t.html().trim().length>0)
+         console.log("selecting cell "+ridx+", "+cix+" with content:"+t.html());
+    }
+    if (t==null || t.html().trim().length===0) return;
     t.css('font-weight','bold');
     t.css('color', '#fff');
     t.css('background-color', clHdrSelFg);
     var th=t.siblings('th')
-    th.css('color', clHdrSelFg);
-    th.css('font-weight', 'bold');
+    selectTH(th);
+    //th.css('font-weight', 'bold');
     selregs[ridx]=1;
     if (selcol===0) {
-        selectTH($('#rxMatrix th:nth-child(' + (cnum+1) + ') > div > span'))
-        selcol=cnum;
+        selectTH($('#rxMatrix th:nth-child(' + (cix+1) + ') > div > span'))
+        selcol=cix;
     }
-    updateRSel();
-    console.log("selected @ col "+cnum+", row "+ridx+" : "+mxVals[ridx][cnum-1]+", selcol="+cnum);
+    if (!noupd) updateRSel();
+    console.log("selected @ col "+cix+", row "+ridx+" : "+mxVals[ridx][cix-1]+", selcol="+cix);
   }
 
-  function deselectCell(t, ridx) {
+  function deselectCell(t, ridx, cix, noupd) {
+    if (t==null) {
+       t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
+       console.log("row:"+ridx+" col"+cix+" : <"+t.html()+">");
+    }
+    if (t == null || t.html().trim().length===0) return;
     t.css('font-weight','normal');
     var obg=t.prop('obg');
     var ofg=t.prop('ofg');
@@ -183,7 +239,8 @@ function RMatrix({ props }) {
     if (obg) t.css('background-color', obg);
     
     selregs[ridx]=0;
-    deselectTH(t.siblings('th'));
+    if (noupd) hoverTH(t.siblings('th'), 1);
+          else deselectTH(t.siblings('th'));
     var sel=0;
     for (let i=0;i<selregs.length;i++) {
       if (selregs[i]) { sel=1; break; }
@@ -193,7 +250,8 @@ function RMatrix({ props }) {
         deselectTH($('#rxMatrix th:nth-child(' + (selcol+1) + ') > div > span'));
       selcol=0;
     }
-    updateRSel();
+    if (!noupd) 
+      updateRSel();
   }
 
 
