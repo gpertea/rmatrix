@@ -4,8 +4,7 @@ import { useRSel } from './RSelCtx';
 function RSelTotal() {
 
   const [selcol, selregs, mxvals] = useRSel();
-  
-  console.log("Rendering rSelData for selcol=" + selcol);
+
    var total=0;
    if (selcol>0) {
      for (var i=0;i<selregs.length; i++) {

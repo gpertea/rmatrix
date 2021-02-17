@@ -75,7 +75,6 @@ function RMatrix({ props }) {
           selregs.push(0);
           mxVals[i]=Array(dtypes.length).fill(0);
       }
-      console.log("jquery Rendering call "+ globvar + " (number of rows: "+ rdata.length+")");
       jqFillMatrix(dtypes, rdata); //get data and fill matrix
   
       //matrix hover behavior
@@ -93,9 +92,6 @@ function RMatrix({ props }) {
           if (selregs[rowidx]) deselectCell(t, rowidx, coln);
                           else selectCell(t, rowidx, coln);
           
-          //console.log("Text for selected cell is: "+$t.text()+ " with col index "+colidx+ " and row index "+rowidx);
-          //glog("Text for selected cell is: ["+t.text()+ "] with col num "+coln+ " and row index "+rowidx+" (selregs["+rowidx+"]="+selregs[rowidx]+")");
-          //alert("Text: "+$t.text());
         });
         $("#rxMatrix th").hover( function()  {
           handleTHover($(this), 0);
@@ -130,9 +126,6 @@ function RMatrix({ props }) {
   }
   
   function updateRSel() {
-    //let selRegsStr="";
-    //for (let i=0;i<selregs.length;i++) selRegsStr+=selregs[i];
-    //console.log("    App selRegsStr: "+selRegsStr);
     setSelData([selcol, selregs, mxVals]);
   }
 
@@ -207,8 +200,6 @@ function RMatrix({ props }) {
   function selectCell(t, ridx, cix, noupd) {
     if (t==null) {
       t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
-      if (t  && t.html().trim().length>0)
-         console.log("selecting cell "+ridx+", "+cix+" with content:"+t.html());
     }
     if (t==null || t.html().trim().length===0) return;
     t.css('font-weight','bold');
@@ -223,13 +214,11 @@ function RMatrix({ props }) {
         selcol=cix;
     }
     if (!noupd) updateRSel();
-    console.log("selected @ col "+cix+", row "+ridx+" : "+mxVals[ridx][cix-1]+", selcol="+cix);
   }
 
   function deselectCell(t, ridx, cix, noupd) {
     if (t==null) {
        t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
-       console.log("row:"+ridx+" col"+cix+" : <"+t.html()+">");
     }
     if (t == null || t.html().trim().length===0) return;
     t.css('font-weight','normal');
@@ -254,7 +243,6 @@ function RMatrix({ props }) {
       updateRSel();
   }
 
-
     return (
         <>
         <div className="col matrixWrap mx-auto">
@@ -272,7 +260,7 @@ function RMatrix({ props }) {
 };
 
 
-  function hoverCell(t, r, c, out) {
+function hoverCell(t, r, c, out) {
     var obg=t.prop('obg');
     if (out) {
        if (obg) {
@@ -286,6 +274,6 @@ function RMatrix({ props }) {
         }
         else t.css('background-color', clShadeHover);
     }
-  }
+}
   
-  export default RMatrix;
+export default RMatrix;
