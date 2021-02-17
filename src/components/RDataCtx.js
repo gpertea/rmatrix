@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 const dtaXTypes=[ 'RNA-seq', 'DNA methylation', 'long read RNA-seq', 'scRNA-seq', 'micro RNA-seq',
   'WGS', 'ATAC-seq' ];
@@ -24,17 +24,25 @@ function fetchData() {
 
 }
 
-const DataCtx = createContext();
 
-function DataCtxProvider({ children }) {
+const RDataCtx = createContext();
+const RDataUpdateCtx = createContext();
 
-  const [mxData, setMxData] = useState ( () => fetchData() );
+export function useRData() {  return useContext(RDataCtx) }
+export function useRDataUpdate() {  return useContext(RDataUpdateCtx) }
+
+export function RDataProvider( {children} ) {
+  //rData is [dtaXtypes, dtaRegion]
+  const [rData, setRData] = useState(() => fetchData())
+  
+  function updateRData(rd) { setRData(rd)  }
   
   return (
-    <DataCtx.Provider value={ mxData }>
+    <RDataCtx.Provider value={rData}>
+      <RDataUpdateCtx.Provider value={updateRData}>
       {children}
-    </DataCtx.Provider>
+      </RDataUpdateCtx.Provider>
+    </RDataCtx.Provider>
   );
 };
 
-export { DataCtx, DataCtxProvider, dtaXTypes,  dtaRegion};

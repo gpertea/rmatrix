@@ -1,5 +1,5 @@
-import React, { useEffect, useContext } from 'react';
-import { DataCtx } from './DataCtx';
+import React, { useEffect } from 'react';
+import { useRData } from './RDataCtx';
 import { useRSelUpdate } from './RSelCtx';
 import $ from 'jquery'
 import './RMatrix.css';
@@ -61,7 +61,7 @@ $('#rxMatrix td').each(function() {
 }
 
 function RMatrix({ props }) {
-    const [dtypes, rdata] = useContext(DataCtx);
+    const [dtypes, rdata] = useRData();
     const setSelData = useRSelUpdate();
     useEffect(()=> jqRender(dtypes, rdata) );
 

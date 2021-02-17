@@ -8,7 +8,7 @@ import RMatrix from './components/RMatrix';
 import RSelTotal from './components/RSelTotal';
 
 import FltMList from './components/FltMList';
-import {DataCtxProvider} from './components/DataCtx';
+import {RDataProvider} from './components/RDataCtx';
 import {RSelProvider} from './components/RSelCtx';
 
 
@@ -24,25 +24,7 @@ function Header() {
   )
 }
 
-var rSelCol=0;
-var rSelRegs=[]; 
-var rMxVals=[];
-
-var selRegsStr="";
-
 function App() {
-  // [ selcol, selregs[], mxVals[][] ]
-  const [change, setChange] = useState( false) ;
-
-  function onRSelChange(r) { 
-    if (r.length!==3) return;
-    [ rSelCol, rSelRegs, rMxVals] = r;
-    console.log("selection change! selCol="+rSelCol);
-    selRegsStr="";
-    for (let i=0;i<rSelRegs.length;i++) selRegsStr+=rSelRegs[i];
-    console.log("    App selRegsStr: "+selRegsStr);
-  }
-  
   return (
     <>
     <div className="container-fluid"> 
@@ -64,23 +46,19 @@ function App() {
           <div className="row"> 
             <FltMList id="filterDataset" />
           </div> 
-          <div className="row"> 
-            <button onClick={()=>setChange(change=>!change)}>Render ALL</button>
-          </div>
         </div>
        <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">
-          <DataCtxProvider>
+          <RDataProvider>
           <RSelProvider>
-             <RMatrix onSelChange={ onRSelChange }/>
+             <RMatrix />
              <RSelTotal />
            </RSelProvider>
-          </DataCtxProvider>
+          </RDataProvider>
           
         </div>
 
         <br/> <br/> <br/> 
-        <span>{rSelRegs.map( (v) => v+"nbsp;")} </span>
         <br/>
         </div>
     </div>
