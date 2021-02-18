@@ -10,7 +10,7 @@ import RSelTotal from './components/RSelTotal';
 import FltMList from './components/FltMList';
 import {RDataProvider} from './components/RDataCtx';
 import {RSelProvider} from './components/RSelCtx';
-
+import {FltDataProvider} from './components/FltDataCtx';
 
 function Header() {
   return(
@@ -31,10 +31,9 @@ function App() {
       <Header />
       <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
         <div className="col bg-light my-sidebar">
-          <div className="row"> 
-            <FltMList id="filterDx" />
-          </div> 
-          <div className="row" style={{height: "2em"}}> </div> 
+          <FltDataProvider>
+            <FltMList id="dx" />
+{/*           <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="filterRace" />
           </div> 
@@ -46,7 +45,8 @@ function App() {
           <div className="row"> 
             <FltMList id="filterDataset" />
           </div> 
-        </div>
+ */}     </FltDataProvider>
+       </div>
        <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">
           <RDataProvider>
@@ -55,8 +55,7 @@ function App() {
              <RSelTotal />
            </RSelProvider>
           </RDataProvider>
-          
-        </div>
+         </div>
 
         <br/> <br/> <br/> 
         <br/>

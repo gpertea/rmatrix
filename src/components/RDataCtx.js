@@ -19,7 +19,7 @@ const dtaRegion = [{"id":1,"name":"Amygdala","num":548},
 
 function fetchData() {
     //we can use axios or whatever to fetch data here
-    console.log("region data fetched");
+    //console.log("region data fetched");
     return [dtaXTypes, dtaRegion];
 
 }

@@ -5,14 +5,15 @@ import $ from 'jquery'
 import './RMatrix.css';
 import * as gu from './gutils'
 
-var globvar=0;
+//var globvar=0;
 var selcol=0;
 var selregs=[];
 var mxVals=[]; //array with counts (assay_types x regions)
-var mxMaxVal = 146; //maximum value in the matrix (for shading)
+var mxMaxVal = 546; //maximum value in the matrix (for shading)
 const clShadeHover='#FFF4F4';
 const clShadeHoverRGB='rgb(255,240,240)';
-const clHdrSelFg='#A00';
+//const clHdrSelFg='#A00';
+const clHdrSelFg='#ed1848';
 
 function jqFillMatrix(xt, rd) {
  //populate top header 
@@ -69,7 +70,7 @@ function RMatrix({ props }) {
       //this should only be called when matrix data is refereshed (dtypes or rdata change)
       //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)
       if (mxVals.length && mxVals.length===rdata.length) return; 
-      globvar++;
+      //globvar++;
       selregs=[];
       for (var i=0;i<rdata.length;i++) {
           selregs.push(0);
