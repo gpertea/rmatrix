@@ -64,11 +64,12 @@ $('#rxMatrix td').each(function() {
 function RMatrix({ props }) {
     const [dtypes, rdata] = useRData();
     const setSelData = useRSelUpdate();
-    useEffect(()=> jqRender(dtypes, rdata) );
+    useEffect( () => jqRender(dtypes, rdata) );
 
     function jqRender(dtypes, rdata) {
       //this should only be called when matrix data is refereshed (dtypes or rdata change)
       //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)
+      console.log(`RMatrix re-render requested (${mxVals.length} : ${rdata.length})`)
       if (mxVals.length && mxVals.length===rdata.length) return; 
       //globvar++;
       selregs=[];
