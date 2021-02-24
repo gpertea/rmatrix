@@ -33,6 +33,8 @@ function jqFillMatrix(xt, rn) { //takes values from mxVals!
     //populate rows:
 let tb= $('#rxMatrix > tbody');
 tb.empty();
+numRegs=rn.length;
+numXTypes=xt.length;
 tb.append(
       $.map(rn, function(r, i) { 
         return '<tr><th>'+r+'</th>'+
@@ -71,10 +73,10 @@ function RMatrix({ props }) {
       //this should only be called when matrix data is refereshed (xtypes or rdata change)
       //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)
       console.log(`RMatrix render requested | xdata len: ${xdata.length}, mxVals len: ${mxVals.length}, rdata len: ${rdata.length}) `);
-      if (counts.l)
       if (mxVals===rdata && numRegs===rdata.length && numXTypes===dtaXTypes.length) return; 
       //TODO: implement a condition for matrix values update only (only counts, selregs is NOT reset!)
       mxVals=rdata; 
+      console.log('resetting selregs');
       selregs=[];
       for (var i=0;i<rdata.length;i++) {
           selregs.push(0);
