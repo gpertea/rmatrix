@@ -20,8 +20,6 @@ const clShadeHoverRGB='rgb(255,240,240)';
 //const clHdrSelFg='#A00';
 const clHdrSelFg='#ed1848';
 
-//TODO: we need a jqUpdateMatrix as well
-
 function jqFillMatrix(xt, rn) { //takes values from mxVals!
  //populate top header 
  let th=$('#rxMatrix > thead');
@@ -62,7 +60,34 @@ $('#rxMatrix td').each(function() {
   }); 
 }
 
-function RMatrix({ props }) {
+function jqUpdateMatrix(xt, rn) { //update values from mxVals
+  //let rix=0, cix=0;
+  $('#rxMatrix > tbody > tr').each( function(rix, tr ) {
+    tr.find('td').each( function (cix, td){
+      //let v=mxVals[rix][cix];
+      let v=toString(rix)+'.'+toString(cix);
+      td.html(v);
+      /* // update shading
+      if (v>0) {
+        let psh=v/(mxMaxVal*4.1); 
+        let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
+        let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
+        t.prop('obg', bc);
+        t.css('background-color', bc);
+        t.prop('ofg',fg);
+        t.css('color', fg);
+       } else { 
+         t.css('cursor', 'default');
+       }
+      */
+    });
+  });
+
+}
+
+
+
+function RMatrix( props ) {
     const [selXType, xdata, counts] = useRData();
     console.log(`RMatrix rendering requested with data length: ${xdata.length}`);
     const setSelData = useRSelUpdate();

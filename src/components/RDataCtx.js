@@ -215,7 +215,7 @@ export function updateCounts() {
         //fill the column with random values
         dtCounts.reg[rg][xt]=v;
       }
-      return; 
+      continue;
     }
     const len=aXd.length;
     console.log(`len for  dtaXall[${xt}] is ${len}`);
