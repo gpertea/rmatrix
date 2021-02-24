@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useRData } from './RDataCtx';
+import { useRData, dtaNames, dtaXTypes, mxMaxVal } from './RDataCtx';
 import { useRSelUpdate } from './RSelCtx';
 import $ from 'jquery'
 import './RMatrix.css';
@@ -9,13 +9,20 @@ import * as gu from './gutils'
 var selcol=0;
 var selregs=[];
 var mxVals=[]; //array with counts (assay_types x regions)
-var mxMaxVal = 546; //maximum value in the matrix (for shading)
+
+// if any of these changes, we'll rebuild/refill the matrix
+// otherwise we should just update the numbers
+var numRegs=0; 
+var numXTypes=0;
+
 const clShadeHover='#FFF4F4';
 const clShadeHoverRGB='rgb(255,240,240)';
 //const clHdrSelFg='#A00';
 const clHdrSelFg='#ed1848';
 
-function jqFillMatrix(xt, rd) {
+//TODO: we need a jqUpdateMatrix as well
+
+function jqFillMatrix(xt, rn) { //takes values from mxVals!
  //populate top header 
  let th=$('#rxMatrix > thead');
  th.empty();
@@ -27,18 +34,10 @@ function jqFillMatrix(xt, rd) {
 let tb= $('#rxMatrix > tbody');
 tb.empty();
 tb.append(
-      $.map(rd, function(r, i) { 
-        return '<tr><th>'+r.name+'</th>'+
+      $.map(rn, function(r, i) { 
+        return '<tr><th>'+r+'</th>'+
            $.map(xt, function(x,j) {
-             var v=0;
-             if (j>0) { //generate randomly
-               v=Math.floor(Math.random() * mxMaxVal);
-               if (v%3===0) v=Math.floor(Math.random() * mxMaxVal);
-                else v=0;
-             } else {
-               v=r.num;
-             }
-             mxVals[i][j]=v;
+             let v=mxVals[i][j];
              if (v===0) v='';
              return '<td>'+v+'</td>';
            }).join() + "</tr>\n";
@@ -62,22 +61,25 @@ $('#rxMatrix td').each(function() {
 }
 
 function RMatrix({ props }) {
-    const [dtypes, rdata] = useRData();
+    const [selXType, xdata, counts] = useRData();
+    console.log(`RMatrix rendering requested with data length: ${xdata.length}`);
     const setSelData = useRSelUpdate();
-    useEffect( () => jqRender(dtypes, rdata) );
+    useEffect( () => jqRender(dtaXTypes, counts.reg) );
+    if (xdata.length===0) return (<div>. . . L O A D I N G . . . </div>);
 
-    function jqRender(dtypes, rdata) {
-      //this should only be called when matrix data is refereshed (dtypes or rdata change)
+    function jqRender(xtypes, rdata) {
+      //this should only be called when matrix data is refereshed (xtypes or rdata change)
       //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)
-      console.log(`RMatrix re-render requested (${mxVals.length} : ${rdata.length})`)
-      if (mxVals.length && mxVals.length===rdata.length) return; 
-      //globvar++;
+      console.log(`RMatrix render requested | xdata len: ${xdata.length}, mxVals len: ${mxVals.length}, rdata len: ${rdata.length}) `);
+      if (counts.l)
+      if (mxVals===rdata && numRegs===rdata.length && numXTypes===dtaXTypes.length) return; 
+      //TODO: implement a condition for matrix values update only (only counts, selregs is NOT reset!)
+      mxVals=rdata; 
       selregs=[];
       for (var i=0;i<rdata.length;i++) {
           selregs.push(0);
-          mxVals[i]=Array(dtypes.length).fill(0);
       }
-      jqFillMatrix(dtypes, rdata); //get data and fill matrix
+      jqFillMatrix(xtypes, dtaNames.reg.slice(1)); //get data and fill matrix
   
       //matrix hover behavior
       $("#rxMatrix td").hover(function()  {

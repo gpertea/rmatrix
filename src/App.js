@@ -31,9 +31,10 @@ function App() {
       <Header />
       <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
         <div className="col bg-light my-sidebar">
-          <FltDataProvider>
+     {/*     <FltDataProvider>
             <FltMList id="dx" />
-{/*           <div className="row" style={{height: "2em"}}> </div> 
+     */}      
+{/*       <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="filterRace" />
           </div> 
@@ -45,7 +46,8 @@ function App() {
           <div className="row"> 
             <FltMList id="filterDataset" />
           </div> 
- */}     </FltDataProvider>
+ */}     
+ {/*  </FltDataProvider> */}
        </div>
        <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">

@@ -7,7 +7,7 @@ my $usage = q/Usage:
 
   writes an object of this format:
     { "obj_id" : [
-      [ col1, col2, ... ]
+      [ col1, col2, ... ],
       ...
      ]}
     There is a single property <obj_id> which has an array of arrays
@@ -28,6 +28,6 @@ while (<>) {
       $f='"'.$f.'"';
     }
   }
-  print "[ ".join(', ',@t)." ]\n";
+  print "[ ".join(', ',@t)." ],\n";
 }
 print "]}\n";
