@@ -8,9 +8,9 @@ import RMatrix from './components/RMatrix';
 import RSelTotal from './components/RSelTotal';
 
 import FltMList from './components/FltMList';
-import {RDataProvider} from './components/RDataCtx';
+import {RDataProvider, FltCtxProvider} from './components/RDataCtx';
 import {RSelProvider} from './components/RSelCtx';
-import {FltDataProvider} from './components/FltDataCtx';
+//import {FltDataProvider} from './components/FltDataCtx';
 
 function Header() {
   return(
@@ -31,6 +31,10 @@ function App() {
       <Header />
       <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
         <div className="col bg-light my-sidebar">
+        {/*  <RDataProvider>
+          <button onClick={}/>
+        </RDataProvider>
+       */}
      {/*     <FltDataProvider>
             <FltMList id="dx" />
      */}      
@@ -53,8 +57,10 @@ function App() {
         <div className="col matrixWrap mx-auto ">
           <RDataProvider>
           <RSelProvider>
+             <FltCtxProvider>
              <RMatrix />
              <RSelTotal />
+             </FltCtxProvider>
            </RSelProvider>
           </RDataProvider>
          </div>

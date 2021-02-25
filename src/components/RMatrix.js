@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useRData, dtaNames, dtaXTypes, mxMaxVal } from './RDataCtx';
+import React, { useEffect, useRef } from 'react';
+import { useRData, rGlobs, dtaNames, dtaXTypes, mxMaxVal, useFltCtx } from './RDataCtx';
 import { useRSelUpdate } from './RSelCtx';
 import $ from 'jquery'
 import './RMatrix.css';
@@ -20,145 +20,207 @@ const clShadeHoverRGB='rgb(255,240,240)';
 //const clHdrSelFg='#A00';
 const clHdrSelFg='#ed1848';
 
-function jqFillMatrix(xt, rn) { //takes values from mxVals!
- //populate top header 
- let th=$('#rxMatrix > thead');
- th.empty();
- th.append('<tr><th class="cr" style="width:8rem;"></th>'+
-    $.map(xt, function(xt) { 
-       return '<th class="rt"><div><span>'+xt+'</span></div></th>';
-    }).join()+'</tr>');
-    //populate rows:
-let tb= $('#rxMatrix > tbody');
-tb.empty();
-numRegs=rn.length;
-numXTypes=xt.length;
-tb.append(
-      $.map(rn, function(r, i) { 
-        return '<tr><th>'+r+'</th>'+
-           $.map(xt, function(x,j) {
-             let v=mxVals[i][j];
-             if (v===0) v='';
-             return '<td>'+v+'</td>';
-           }).join() + "</tr>\n";
-     }).join());
-     // now iterate through all cells to record their original color values
-$('#rxMatrix td').each(function() {
-         let t=$(this);
-         let v=t.html();
-         if (v>0) {
-          let psh=v/(mxMaxVal*4.1); 
-          let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
-          let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
-          t.prop('obg', bc);
-          t.css('background-color', bc);
-          t.prop('ofg',fg);
-          t.css('color', fg);
-         } else { 
-           t.css('cursor', 'default');
-         }
-  }); 
-}
-
-function jqUpdateMatrix(xt, rn) { //update values from mxVals
-  //let rix=0, cix=0;
-  $('#rxMatrix > tbody > tr').each( function(rix, tr ) {
-    tr.find('td').each( function (cix, td){
-      //let v=mxVals[rix][cix];
-      let v=toString(rix)+'.'+toString(cix);
-      td.html(v);
-      /* // update shading
-      if (v>0) {
-        let psh=v/(mxMaxVal*4.1); 
-        let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
-        let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
-        t.prop('obg', bc);
-        t.css('background-color', bc);
-        t.prop('ofg',fg);
-        t.css('color', fg);
-       } else { 
-         t.css('cursor', 'default');
-       }
-      */
-    });
-  });
-
-}
-
-
+var setSelData=null;
+var isFirstRender=false;
 
 function RMatrix( props ) {
     const [selXType, xdata, counts] = useRData();
+    const [fltData, fltUpdate ] = useFltCtx(); //fltUpdate should be a flip-flop
+    isFirstRender=useFirstRender(); //only true for the first render!
     console.log(`RMatrix rendering requested with data length: ${xdata.length}`);
-    const setSelData = useRSelUpdate();
-    useEffect( () => jqRender(dtaXTypes, counts.reg) );
-    if (xdata.length===0) return (<div>. . . L O A D I N G . . . </div>);
+    //const setSelDataFunc = useRSelUpdate();
+    setSelData = useRSelUpdate();
 
-    function jqRender(xtypes, rdata) {
-      //this should only be called when matrix data is refereshed (xtypes or rdata change)
-      //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)
-      console.log(`RMatrix render requested | xdata len: ${xdata.length}, mxVals len: ${mxVals.length}, rdata len: ${rdata.length}) `);
-      if (mxVals===rdata && numRegs===rdata.length && numXTypes===dtaXTypes.length) return; 
-      //TODO: implement a condition for matrix values update only (only counts, selregs is NOT reset!)
-      mxVals=rdata; 
-      console.log('resetting selregs');
-      selregs=[];
-      for (var i=0;i<rdata.length;i++) {
-          selregs.push(0);
-      }
-      jqFillMatrix(xtypes, dtaNames.reg.slice(1)); //get data and fill matrix
-  
-      //matrix hover behavior
-      $("#rxMatrix td").hover(function()  {
-          handleHover($(this), 0);
-        }, function() { 
-          handleHover($(this), 1);
-        });
-  
-        $("#rxMatrix td").click( function() {
-          var t=$(this);
-          var coln = t.index(); // 1-based !
-          var rowidx =  t.parent().index();
-          if (selcol>0 && selcol!==coln) return; //ignore click outside the allowed column
-          if (selregs[rowidx]) deselectCell(t, rowidx, coln);
-                          else selectCell(t, rowidx, coln);
-          
-        });
-        $("#rxMatrix th").hover( function()  {
-          handleTHover($(this), 0);
-        }, function() {
-          handleTHover($(this), 1);
-        });
-
-        //top header click behavior: toggle select/deselect all
-        $("#rxMatrix th").click( function() {
-          let t=$(this);
-          let cix=t.index();
-          if (t.hasClass("rt")) { // assay type header click
-             if (selcol>0 && selcol!==cix) return;
-             if (selcol>0) {
-               for (let r=0;r<selregs.length;r++) {
-                       if (selregs[r]>0) {
-                            deselectCell(null, r, cix, 1);
-                       }
-               }
-             } else { //select all
-              for (let r=0;r<selregs.length;r++) {
-                     selectCell(null, r, cix, 1);
-              } 
+    useEffect( () =>  { 
+        console.log('RMatrix: render requested due to RData update')
+        if (rGlobs.rebuildRMatrix) {
+              mxVals=[];
+              numRegs=0;numXTypes=0;
+              jqRender(dtaXTypes, counts.reg); 
             }
-            updateRSel();
-          } else { // region header
-            let rix=t.parent().index();
-            if (selcol>0 && selregs[rix]) return;
-          }
-        });
+        } );
 
-  }
+        useEffect( () =>  { 
+           //if (isFirstRender) return;
+           jqUpdate();    
+        }, [fltUpdate] );
+
+
+    if (xdata.length===0) return (<div>. . . L O A D I N G . . . </div>);
+ 
+    return (
+        <>
+        <div className="col matrixWrap mx-auto">
+          <h4 style={{marginLeft: "-2.4em"}}>Region Matrix</h4>
+          <table id="rxMatrix">
+            <thead>
+              
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div> 
+        </>
+    )
+};
+
+function updateRSel() {
+  setSelData([selcol, selregs, mxVals]);
+}
+
+function jqFillMatrix(xt, rn) { //takes values from mxVals!
+  //populate top header 
+  let th=$('#rxMatrix > thead');
+  th.empty();
+  th.append('<tr><th class="cr" style="width:8rem;"></th>'+
+     $.map(xt, function(xt) { 
+        return '<th class="rt"><div><span>'+xt+'</span></div></th>';
+     }).join()+'</tr>');
+     //populate rows:
+ let tb= $('#rxMatrix > tbody');
+ tb.empty();
+ numRegs=rn.length;
+ numXTypes=xt.length;
+ tb.append(
+       $.map(rn, function(r, i) { 
+         return '<tr><th>'+r+'</th>'+
+            $.map(xt, function(x,j) {
+              let v=mxVals[i][j];
+              if (v===0) v='';
+              return '<td>'+v+'</td>';
+            }).join() + "</tr>\n";
+      }).join());
+      // now iterate through all cells to record their original color values
+ $('#rxMatrix td').each(function() {
+          let t=$(this);
+          let v=t.html();
+          if (v>0) {
+           let psh=v/(mxMaxVal*4.1); 
+           let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
+           let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
+           t.prop('obg', bc);
+           t.css('background-color', bc);
+           t.prop('ofg',fg);
+           t.css('color', fg);
+          } else { 
+            t.css('cursor', 'default');
+          }
+   }); 
+ }
+ 
+ function jqUpdate() { //update values from mxVals
+   //let rix=0, cix=0;
+   if (isFirstRender || mxVals.length===0) return;
+   $('#rxMatrix > tbody > tr').each( function(rix, tr ) {
+     tr.find('td').each( function (cix, td){
+       //let v=mxVals[rix][cix];
+       let v=toString(rix)+'.'+toString(cix);
+       td.html(v);
+       /* // update shading
+       if (v>0) {
+         let psh=v/(mxMaxVal*4.1); 
+         let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
+         let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
+         t.prop('obg', bc);
+         t.css('background-color', bc);
+         t.prop('ofg',fg);
+         t.css('color', fg);
+        } else { 
+          t.css('cursor', 'default');
+        }
+       */
+     });
+   });
+ 
+ }
+ 
+ function useFirstRender() {
+   const isFirstRef = useRef(true);
+   useEffect(() => {
+     isFirstRef.current = false;
+   }, []);
+   return isFirstRef.current;
+ };
+
+function jqRender(xtypes, rdata) {
+  //this should only be called when matrix data is refereshed (xtypes or rdata change)
+  //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)
+  //if (mxVals===rdata && numRegs===rdata.length && numXTypes===dtaXTypes.length) return; 
+  if (rdata.length===0) return; 
+
+  rGlobs.rebuildRMatrix=false;
+
+  mxVals=rdata; 
   
-  function updateRSel() {
-    setSelData([selcol, selregs, mxVals]);
+  selregs=[];
+  for (var i=0;i<rdata.length;i++) {
+      selregs.push(0);
   }
+  jqFillMatrix(xtypes, dtaNames.reg.slice(1)); //get data and fill matrix
+
+  //matrix hover behavior
+  $("#rxMatrix td").hover(function()  {
+      handleHover($(this), 0);
+    }, function() { 
+      handleHover($(this), 1);
+    });
+
+    $("#rxMatrix td").click( function() {
+      var t=$(this);
+      var coln = t.index(); // 1-based !
+      var rowidx =  t.parent().index();
+      if (selcol>0 && selcol!==coln) return; //ignore click outside the allowed column
+      if (selregs[rowidx]) deselectCell(t, rowidx, coln);
+                      else selectCell(t, rowidx, coln);
+      
+    });
+    $("#rxMatrix th").hover( function()  {
+      handleTHover($(this), 0);
+    }, function() {
+      handleTHover($(this), 1);
+    });
+
+    //top header click behavior: toggle select/deselect all
+    $("#rxMatrix th").click( function() {
+      let t=$(this);
+      let cix=t.index();
+      if (t.hasClass("rt")) { // assay type header click
+         if (selcol>0 && selcol!==cix) return;
+         if (selcol>0) {
+           for (let r=0;r<selregs.length;r++) {
+                   if (selregs[r]>0) {
+                        deselectCell(null, r, cix, 1);
+                   }
+           }
+         } else { //select all
+          for (let r=0;r<selregs.length;r++) {
+                 selectCell(null, r, cix, 1);
+          } 
+        }
+        updateRSel();
+      } else { // region header
+        let rix=t.parent().index();
+        if (selcol>0 && selregs[rix]) return;
+      }
+    });
+
+}
+
+function hoverCell(t, r, c, out) {
+    var obg=t.prop('obg');
+    if (out) {
+       if (obg) {
+          t.css('background-color', obg);
+       }
+       else t.css('background-color', '');
+    } else {
+        if (obg) {
+        var nc=gu.blendRGBColors(obg, clShadeHoverRGB, 0.1);
+        t.css('background-color', nc );
+        }
+        else t.css('background-color', clShadeHover);
+    }
+}
 
   //--- jquery utility functions
   function handleTHover(t, out) {
@@ -274,37 +336,4 @@ function RMatrix( props ) {
       updateRSel();
   }
 
-    return (
-        <>
-        <div className="col matrixWrap mx-auto">
-          <h4 style={{marginLeft: "-2.4em"}}>Region Matrix</h4>
-          <table id="rxMatrix">
-            <thead>
-              
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-        </div> 
-        </>
-    )
-};
-
-
-function hoverCell(t, r, c, out) {
-    var obg=t.prop('obg');
-    if (out) {
-       if (obg) {
-          t.css('background-color', obg);
-       }
-       else t.css('background-color', '');
-    } else {
-        if (obg) {
-        var nc=gu.blendRGBColors(obg, clShadeHoverRGB, 0.1);
-        t.css('background-color', nc );
-        }
-        else t.css('background-color', clShadeHover);
-    }
-}
-  
 export default RMatrix;

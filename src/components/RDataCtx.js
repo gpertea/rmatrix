@@ -4,7 +4,10 @@ import { createContext, useContext, useState, useEffect } from "react";
 export const dtaXTypes=[ 'RNA-seq', 'DNA methylation', 'long read RNA-seq', 'scRNA-seq', 'micro RNA-seq',
   'WGS', 'ATAC-seq' ];
 
-export var selXType = 0; //currently targeted experiment/assay type 
+export const rGlobs={
+     selXType : 0, //currently targeted experiment/assay type 
+     rebuildRMatrix: true
+};
 
 export const dtaRaceIdx={ "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 };
 export const dtaSexIdx={ "F":1, "M":2 };
@@ -107,7 +110,7 @@ const dtaRegion = [{"id":1,"name":"Amygdala","num":548},
 ];
 */
 
-export function prepData(allData) {
+export function loadData(allData) {
     //after data was fetched in allData
     
     let nreg=dtaNames.reg;
@@ -134,7 +137,7 @@ export function prepData(allData) {
 
     // free memory from loaded/fetched JSON bulk data
     allData=null;
-    selXType=0;
+    rGlobs.selXType=0;
 
     //initialize counts : just push 0 as necessary
    ["dx", "dset", "age", "sex", "race"].forEach (
@@ -148,7 +151,7 @@ export function prepData(allData) {
     let nr=dtaNames.reg.length-1;
     let rd=dtCounts.reg;
     let nxt=dtaXTypes.length;
-    console.log(`initialize dtCounts.reg with ${nr} rows and ${nxt} columns`);
+
     for (let i=0;i<nr;i++) {
         rd[i]=new Array(nxt).fill(0);
     }
@@ -157,7 +160,8 @@ export function prepData(allData) {
 
     // returns [ the selected experiment type, list of samples for the current exp type,
     //   counts data (dtCounts.reg has the whole region matrix data!) ];
-    return [selXType, dtXs, dtCounts ];
+    rGlobs.rebuildRMatrix=true;
+    return [ rGlobs.selXType, dtXs, dtCounts ];
 }
 
 /*function ageWithin(a) {
@@ -187,7 +191,7 @@ function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge l
   return 0;
 }
 
-export function updateCounts() {
+export function updateCounts() { //returns [selXType, dtXs, dtCounts, true ]
    //fills all dtn* arrays according to the dtf* filters, from dtaXall[selXType]
    dtXs.length=0; //will populate
    ["dx", "dset", "age", "sex", "race"].forEach (
@@ -201,12 +205,13 @@ export function updateCounts() {
     for (let i=0;i<nr;i++) {
          rd[i].fill(0);
      }
-   for (let xt=0;xt<dtaXTypes.length;++xt) { //for each exp type
+   let selXType=rGlobs.selXType;
+   for (let xt=0;xt<dtaXTypes.length;xt++) { //for each exp type
     let aXd=dtaXall[xt];
     if (!aXd || aXd.length===0) { //no data available for this experiment type
       if (xt===selXType) {
         console.log(`Error: no data found for selXType ${selXType} : ${dtaXTypes[xt]}`);
-        return;
+        continue;
       }
       // generate some random region counts and exit
       for (let rg=0;rg<dtaNames.reg.length-1;++rg) {
@@ -218,7 +223,6 @@ export function updateCounts() {
       continue;
     }
     const len=aXd.length;
-    console.log(`len for  dtaXall[${xt}] is ${len}`);
 
     for (let i=0;i<len;++i) { //for each sample data row
         const [sid, d, dx, r, s, a, rg] = aXd[i];
@@ -248,6 +252,7 @@ export function updateCounts() {
         dtXs.push([sid, d, dx, r, s, a, rg]); //metadata for each sample that passed
     }
   }
+    return [selXType, dtXs, dtCounts ] 
 }
 
 const RDataCtx = createContext();
@@ -258,7 +263,7 @@ export function useRDataUpdate() {  return useContext(RDataUpdateCtx) }
 
 export function RDataProvider( {children} ) {
   //rcData is [selXType, dtXs, dtCounts ]
-  const [rcData, setRData] = useState([selXType, dtXs, dtCounts]);
+  const [rcData, setRData] = useState([rGlobs.selXType, dtXs, dtCounts]);
   const [query, setQuery] = useState('all_data.json');
   
   function updateRData(qry, dta) { 
@@ -270,7 +275,7 @@ export function RDataProvider( {children} ) {
     fetch(query) //must be in ./public folder
       .then( r => r.json())
       .then( res => {
-        setRData(prepData(res));
+        setRData(loadData(res)); 
      })
     .catch(error => console.log(error));
   }, [query]);
@@ -284,3 +289,35 @@ export function RDataProvider( {children} ) {
   );
 };
 
+const FltCtx = createContext();
+const FltCtxUpdate = createContext();
+
+export function useFltCtx() { 
+    const ctx=useContext(FltCtx);
+    //making sure this is not used outside a provider
+    if (ctx === undefined) {
+        throw new Error(`useFltCtx must be used within FltCtxProvider!`)
+    }
+    return ctx; 
+}
+export function useFltCtxUpdate() { 
+    const ctx=useContext(FltCtxUpdate);  
+    //making sure this is not used outside a provider
+    if (ctx === undefined) {
+        throw new Error(`useFltCtxUpdate must be used within FltCtxProvider!`)
+    }
+    return ctx; 
+}
+
+export function FltCtxProvider (props) {
+    // fltData is always [dtFilter, flipFlop]
+    const [ fltData, setFltInfo] = useState([dtFilters, false])
+
+    return (
+     <FltCtx.Provider value={fltData}>
+         <FltCtxUpdate.Provider value={setFltInfo}>
+             {props.children}
+         </FltCtxUpdate.Provider>
+     </FltCtx.Provider>
+    )
+}
