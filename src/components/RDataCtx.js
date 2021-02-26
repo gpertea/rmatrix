@@ -191,7 +191,7 @@ function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge l
   return 0;
 }
 
-export function updateCounts() { //returns [selXType, dtXs, dtCounts, true ]
+export function updateCounts() {
    //fills all dtn* arrays according to the dtf* filters, from dtaXall[selXType]
    dtXs.length=0; //will populate
    ["dx", "dset", "age", "sex", "race"].forEach (
@@ -252,7 +252,7 @@ export function updateCounts() { //returns [selXType, dtXs, dtCounts, true ]
         dtXs.push([sid, d, dx, r, s, a, rg]); //metadata for each sample that passed
     }
   }
-    return [selXType, dtXs, dtCounts ] 
+    //return [selXType, dtXs, dtCounts ] 
 }
 
 const RDataCtx = createContext();
@@ -310,12 +310,15 @@ export function useFltCtxUpdate() {
 }
 
 export function FltCtxProvider (props) {
-    // fltData is always [dtFilter, flipFlop]
-    const [ fltData, setFltInfo] = useState([dtFilters, false])
-
+    // fltUpdated is just a flip-flop state
+    // so notifyFltChange is just a state change notifier and 
+    // should be called after calling updateCounts()
+    // so dtCounts global object should have been updated already
+    const [fltUpdated,  notifyFltChange] = useState(false)
+    console.log("FltContextProvider state change: "+fltUpdated);
     return (
-     <FltCtx.Provider value={fltData}>
-         <FltCtxUpdate.Provider value={setFltInfo}>
+     <FltCtx.Provider value={fltUpdated}>
+         <FltCtxUpdate.Provider value={notifyFltChange}>
              {props.children}
          </FltCtxUpdate.Provider>
      </FltCtx.Provider>

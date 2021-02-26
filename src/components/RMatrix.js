@@ -25,9 +25,9 @@ var isFirstRender=false;
 
 function RMatrix( props ) {
     const [selXType, xdata, counts] = useRData();
-    const [fltData, fltUpdate ] = useFltCtx(); //fltUpdate should be a flip-flop
+    const fltUpdate = useFltCtx(); //fltUpd is just a flip-flop
     isFirstRender=useFirstRender(); //only true for the first render!
-    console.log(`RMatrix rendering requested with data length: ${xdata.length}`);
+    console.log(`RMatrix rendering requested: fltUpdate=${fltUpdate} data length: ${xdata.length}`);
     //const setSelDataFunc = useRSelUpdate();
     setSelData = useRSelUpdate();
 
@@ -94,43 +94,47 @@ function jqFillMatrix(xt, rn) { //takes values from mxVals!
  $('#rxMatrix td').each(function() {
           let t=$(this);
           let v=t.html();
-          if (v>0) {
-           let psh=v/(mxMaxVal*4.1); 
-           let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
-           let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
-           t.prop('obg', bc);
-           t.css('background-color', bc);
-           t.prop('ofg',fg);
-           t.css('color', fg);
-          } else { 
-            t.css('cursor', 'default');
-          }
+          shadeCell(t,v)
    }); 
  }
  
+ function shadeCell(t, v) {
+  if (v>0) {
+    let psh=v/(mxMaxVal*4.1); 
+    let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
+    let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
+    t.prop('obg', bc);
+    t.css('background-color', bc);
+    t.prop('ofg',fg);
+    t.css('color', fg);
+    t.css('cursor', 'pointer');
+  } else { 
+    t.removeProp('obg');
+    t.removeProp('ofg');
+    t.css('cursor', 'default');
+    t.css('background-color', '');
+    t.css('color', '');
+  }
+
+ }
+
  function jqUpdate() { //update values from mxVals
    //let rix=0, cix=0;
    if (isFirstRender || mxVals.length===0) return;
    $('#rxMatrix > tbody > tr').each( function(rix, tr ) {
-     tr.find('td').each( function (cix, td){
-       //let v=mxVals[rix][cix];
-       let v=toString(rix)+'.'+toString(cix);
-       td.html(v);
-       /* // update shading
-       if (v>0) {
-         let psh=v/(mxMaxVal*4.1); 
-         let bc=gu.shadeRGBColor('rgb(240,240,240)', -psh);
-         let fg=(gu.getRGBLuminance(bc)<120)? '#fff':'#000';
-         t.prop('obg', bc);
-         t.css('background-color', bc);
-         t.prop('ofg',fg);
-         t.css('color', fg);
-        } else { 
-          t.css('cursor', 'default');
+     $(tr).find('td').each( function (cix, td){
+       let v=mxVals[rix][cix];
+       //console.log(`rix=${rix}, cix=${cix}`)
+       //let v=rix.toString()+'.'+cix.toString();
+       let t=$(td);
+       t.html((v===0)?'':v);
+       shadeCell(t,v);
+       if (cix+1===selcol && selregs[rix]) {
+              selectCell(t, rix, cix, 1);
         }
-       */
      });
    });
+   updateRSel();
  
  }
  
@@ -171,7 +175,7 @@ function jqRender(xtypes, rdata) {
       var rowidx =  t.parent().index();
       if (selcol>0 && selcol!==coln) return; //ignore click outside the allowed column
       if (selregs[rowidx]) deselectCell(t, rowidx, coln);
-                      else selectCell(t, rowidx, coln);
+                      else if (t.html()>0) selectCell(t, rowidx, coln);
       
     });
     $("#rxMatrix th").hover( function()  {
@@ -192,7 +196,7 @@ function jqRender(xtypes, rdata) {
                         deselectCell(null, r, cix, 1);
                    }
            }
-         } else { //select all
+         } else { //select all ?
           for (let r=0;r<selregs.length;r++) {
                  selectCell(null, r, cix, 1);
           } 
@@ -200,7 +204,11 @@ function jqRender(xtypes, rdata) {
         updateRSel();
       } else { // region header
         let rix=t.parent().index();
-        if (selcol>0 && selregs[rix]) return;
+        console.log(`clicked region header rix ${rix}, selcol=${selcol}`);
+        if (selcol>0) {
+          if (selregs[rix]) deselectCell(null, rix, selcol);
+                         else selectCell(null, rix, selcol);
+        }
       }
     });
 
@@ -294,7 +302,8 @@ function hoverCell(t, r, c, out) {
     if (t==null) {
       t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
     }
-    if (t==null || t.html().trim().length===0) return;
+    //if (t==null || t.html().trim().length===0) return;
+    if (t==null) return;
     t.css('font-weight','bold');
     t.css('color', '#fff');
     t.css('background-color', clHdrSelFg);
@@ -313,16 +322,18 @@ function hoverCell(t, r, c, out) {
     if (t==null) {
        t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
     }
-    if (t == null || t.html().trim().length===0) return;
+    if (t == null) return;
     t.css('font-weight','normal');
     var obg=t.prop('obg');
     var ofg=t.prop('ofg');
-    if (ofg) t.css('color', ofg);
-    if (obg) t.css('background-color', obg);
+    if (ofg) t.css('color', ofg); else t.css('color', '');
+    if (obg) t.css('background-color', obg); 
+           else t.css('background-color', '');
     
     selregs[ridx]=0;
-    if (noupd) hoverTH(t.siblings('th'), 1);
-          else deselectTH(t.siblings('th'));
+    //if (noupd) hoverTH(t.siblings('th'), 1);
+         // else 
+    deselectTH(t.siblings('th'));
     var sel=0;
     for (let i=0;i<selregs.length;i++) {
       if (selregs[i]) { sel=1; break; }

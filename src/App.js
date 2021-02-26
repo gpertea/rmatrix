@@ -8,7 +8,7 @@ import RMatrix from './components/RMatrix';
 import RSelTotal from './components/RSelTotal';
 
 import FltMList from './components/FltMList';
-import {RDataProvider, FltCtxProvider} from './components/RDataCtx';
+import {RDataProvider, FltCtxProvider, useFltCtxUpdate, updateCounts} from './components/RDataCtx';
 import {RSelProvider} from './components/RSelCtx';
 //import {FltDataProvider} from './components/FltDataCtx';
 
@@ -24,17 +24,33 @@ function Header() {
   )
 }
 
+
+function UpdateButton() {
+
+  const notifyFltUpdate=useFltCtxUpdate();
+
+  function ClickUpdate() {
+    updateCounts();
+    console.log('sending notifyFltUpdate');
+    notifyFltUpdate( s => !s ); //no need to know previous value, just flip it!
+  }
+
+  return (<div>
+    <button onClick={ClickUpdate}>Update</button>
+    </div>)
+}
+
+
 function App() {
   return (
     <>
     <div className="container-fluid"> 
       <Header />
+
       <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
+      <FltCtxProvider>
         <div className="col bg-light my-sidebar">
-        {/*  <RDataProvider>
-          <button onClick={}/>
-        </RDataProvider>
-       */}
+          <UpdateButton/>
      {/*     <FltDataProvider>
             <FltMList id="dx" />
      */}      
@@ -57,18 +73,18 @@ function App() {
         <div className="col matrixWrap mx-auto ">
           <RDataProvider>
           <RSelProvider>
-             <FltCtxProvider>
              <RMatrix />
              <RSelTotal />
-             </FltCtxProvider>
            </RSelProvider>
           </RDataProvider>
          </div>
 
         <br/> <br/> <br/> 
         <br/>
-        </div>
+      </div>
+      </FltCtxProvider>
     </div>
+    
   </div> 
   </>
   )

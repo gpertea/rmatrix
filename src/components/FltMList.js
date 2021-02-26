@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react'
 import './FltMList.css'
-import {useFltData, useFltDataUpdate} from './FltDataCtx'
+import { useRData, rGlobs, dtaNames, useFltCtxUpdate } from './RDataCtx';
 import $, { map } from 'jquery'
 //import Popper from 'popper.js';
 import 'bootstrap/dist/js/bootstrap.bundle.min'
@@ -18,7 +18,7 @@ function strPut(s, i, c) {
 
 //filtering multi-select list component 
 function FltMList( props ) {
-  const fltData = useFltData(props.id);
+  const fltData = useFltCtxUpdate(props.id);
   const onlyData=[]; //array with only selected indexes
   var onlyStates=''; //changing/current selected states
   fltData.map( ()  => onlyStates += '0' );
