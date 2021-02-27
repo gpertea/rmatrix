@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useRef, useEffect } from "react";
 //import allData from '../all_data.json';
 
 export const dtaXTypes=[ 'RNA-seq', 'DNA methylation', 'long read RNA-seq', 'scRNA-seq', 'micro RNA-seq',
@@ -9,10 +9,10 @@ export const rGlobs={
      rebuildRMatrix: true
 };
 
-export const dtaRaceIdx={ "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 };
-export const dtaSexIdx={ "F":1, "M":2 };
-const AGE_LAST_RANGE = 75;
-export const dtaAgeRanges = [[-0.1], [0,12.9], [13,18.9],[19,35.9], [36,54.9], [55,74.9], [AGE_LAST_RANGE] ]; //all pre-defined age ranges
+//export const dtaRaceIdx={ "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 };
+//export const dtaSexIdx={ "F":1, "M":2 };
+export const AGE_LAST_RANGE = 75;
+//export const dtaAgeRanges = [[-0.1], [0,12.9], [13,18.9],[19,35.9], [36,54.9], [55,74.9], [AGE_LAST_RANGE] ]; //all pre-defined age ranges
 
 export const mxMaxVal = 546;
 
@@ -23,8 +23,11 @@ export const dtaNames = {
     dx : ['dx' ], //push allData.dx names, index MUST match their IDs in the dtaXd[x] arr rows
     dset: [ 'dset' ], //push allData.dset names and public flag
     race : [ 'race', "AA", "AS", "CAUC", "HISP", "Other" ],
+    raceIdx : { "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 },
     sex : [ 'sex', "F", "M" ],
-    age: ['age', 'fetal', '0-12','13-18','19-35', '36-54', '55-74', '75+'] //push age range labels corresponding to dtaAgeRanges
+    sexIdx : { "F":1, "M":2 },
+    age: ['age', 'fetal', '0-12','13-18','19-35', '36-54', '55-74', '75+'], //push age range labels corresponding to dtaAgeRanges
+    ageRanges: [[-0.1], [0,12.9], [13,18.9],[19,35.9], [36,54.9], [55,74.9], [AGE_LAST_RANGE] ]
 };
 
 //push allData.sdata arrays, i.e. samples w/metadata 
@@ -178,6 +181,7 @@ export function loadData(allData) {
   }
   return false;
 }*/
+const dtaAgeRanges=dtaNames.ageRanges;
 
 function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge label index
   if (a<0) return 1; //fetal
@@ -190,6 +194,9 @@ function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge l
   }
   return 0;
 }
+
+const dtaRaceIdx=dtaNames.raceIdx;
+const dtaSexIdx=dtaNames.sexIdx;
 
 export function updateCounts() {
    //fills all dtn* arrays according to the dtf* filters, from dtaXall[selXType]
@@ -289,6 +296,15 @@ export function RDataProvider( {children} ) {
   );
 };
 
+
+export function useFirstRender() {
+  const isFirstRef = useRef(true);
+  useEffect(() => {
+    isFirstRef.current = false;
+  }, []);
+  return isFirstRef.current;
+};
+
 const FltCtx = createContext();
 const FltCtxUpdate = createContext();
 
@@ -315,10 +331,17 @@ export function FltCtxProvider (props) {
     // should be called after calling updateCounts()
     // so dtCounts global object should have been updated already
     const [fltUpdated,  notifyFltChange] = useState(false)
-    console.log("FltContextProvider state change: "+fltUpdated);
+    //console.log("FltContextProvider state change: "+fltUpdated);
+    
+    //-- this should be called by the context consumer
+    //   to signal an update of dtCounts after filters are applied
+    function updateSignal() {
+      notifyFltChange( s => !s);
+    }
+
     return (
      <FltCtx.Provider value={fltUpdated}>
-         <FltCtxUpdate.Provider value={notifyFltChange}>
+         <FltCtxUpdate.Provider value={updateSignal}>
              {props.children}
          </FltCtxUpdate.Provider>
      </FltCtx.Provider>

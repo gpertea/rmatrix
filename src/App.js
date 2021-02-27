@@ -32,7 +32,7 @@ function UpdateButton() {
   function ClickUpdate() {
     updateCounts();
     console.log('sending notifyFltUpdate');
-    notifyFltUpdate( s => !s ); //no need to know previous value, just flip it!
+    notifyFltUpdate(); 
   }
 
   return (<div>
@@ -50,7 +50,7 @@ function App() {
       <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
       <FltCtxProvider>
         <div className="col bg-light my-sidebar">
-          <UpdateButton/>
+         <UpdateButton/>
      {/*     <FltDataProvider>
             <FltMList id="dx" />
      */}      

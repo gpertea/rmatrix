@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { useRData, rGlobs, dtaNames, dtaXTypes, mxMaxVal, useFltCtx } from './RDataCtx';
+import { useRData, rGlobs, dtaNames, dtaXTypes, mxMaxVal, 
+         useFltCtx, useFirstRender } from './RDataCtx';
 import { useRSelUpdate } from './RSelCtx';
 import $ from 'jquery'
 import './RMatrix.css';
@@ -138,14 +139,6 @@ function jqFillMatrix(xt, rn) { //takes values from mxVals!
  
  }
  
- function useFirstRender() {
-   const isFirstRef = useRef(true);
-   useEffect(() => {
-     isFirstRef.current = false;
-   }, []);
-   return isFirstRef.current;
- };
-
 function jqRender(xtypes, rdata) {
   //this should only be called when matrix data is refereshed (xtypes or rdata change)
   //should have a better check for data refresh (e.g. resetting mxVals.length after a refresh should do it)

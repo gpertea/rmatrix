@@ -1,12 +1,13 @@
 import React, {useEffect} from 'react'
 import './FltMList.css'
-import { useRData, rGlobs, dtaNames, useFltCtxUpdate } from './RDataCtx';
+import {  rGlobs, dtaNames, useFirstRender, useRData, 
+         dtFilters, useFltCtx, useFltCtxUpdate, updateCounts } from './RDataCtx';
 import $, { map } from 'jquery'
 //import Popper from 'popper.js';
 import 'bootstrap/dist/js/bootstrap.bundle.min'
 
 const id2name = { dx : "Diagnosis", age: "Age", race: "Race", 
-          sex: "Sex" , dset: "Dataset", proto : "Protocol" };
+          sex: "Sex" , dset: "Dataset", proto : "Protocol", pub : "Public" };
 
 //return a string obtained by changing character at position i in s with c
 function strPut(s, i, c) {
@@ -16,151 +17,60 @@ function strPut(s, i, c) {
   return r;
 }
 
+// these should persist between rerenders
+const onlyData=[]; //array with only selected indexes
+var onlyStates=''; //changing/current selected states
+var appliedStates='' // states as last applied
+var jqCreated=false;
+var isFirstRender=false;
+
+var btnApply=null;
+var notifyUpdate=null;
+
+const fltData=[]; //[fltNames, fltCounts, fltSet]
+                  //     0,       1,        2
 //filtering multi-select list component 
 function FltMList( props ) {
-  const fltData = useFltCtxUpdate(props.id);
-  const onlyData=[]; //array with only selected indexes
-  var onlyStates=''; //changing/current selected states
-  fltData.map( ()  => onlyStates += '0' );
-  var appliedStates=onlyStates; //states as last applied
 
-  var fltChanged=false; //if true, Apply filter needed
-  var btnApply=null;
-  //const setSelData = useRSelUpdate();
-  useEffect(()=> jqRender(props.id, fltData) );
+  const [selXType, xdata, countData] = useRData();
 
-  function jqRender(id, dta) {
-    populateList(id, dta);
-     //$(document)
-    let jc=$('#'+id);
-    jc.on('click', '.lg-title', function(e) {
-        var t = $(this);
-        var p = t.parents('.lg-panel').find('.lg-scroller');
-        if(!t.hasClass('lg-collapsed')) {
-          p.collapse('hide');
-          t.addClass('lg-collapsed');
-          t.removeClass('lg-b-shadow');
-          t.find('.coll-glyph').html("&#x25BD;")
-          //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
-        } else {
-          p.collapse('show');
-          t.removeClass('lg-collapsed');
-          scrollShader(p);
-          t.find('.coll-glyph').html("&#x25B3;")
-          //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
-        }
-      });
-  
-      jc.on('click', '.lg-item', function(e) {
-        var t = $(this);
-        if(!t.hasClass('lg-sel')) {
-        //var p=$this.parents('.panel').find('.panel-body');
-        t.addClass('lg-sel');
-        addOnlyItem(t);
-        //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
-      } else {
-        t.removeClass('lg-sel');
-        //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
-        removeOnlyItem(t);
-      }
-    });
+  //callback to use to inform other consumers of an applied filter:
+  notifyUpdate = useFltCtxUpdate(); 
+  const fltUpdate = useFltCtx(); //external update, should update these counts
+  const fid=props.id;
 
-    let jscroller=$('#'+id+' .lg-scroller');
-    scrollShader(jscroller);
-    jscroller.on('scroll', (e) => scrollShader($(e.target)) );
-
-    btnApply = jc.find('.lg-apply');
-    btnApply.on('click', function(e) {
-      //actually apply the changes
-      $(this).hide();
-      fltChanged=false;
-      appliedStates=onlyStates;
-      e.stopPropagation();
-    });
-
-    btnApply.hide();
-
-  }
-  
-  function filterChanged() { //must apply it
-      if (onlyStates===appliedStates) {
-        fltChanged=false;
-        btnApply.hide();
-        return;
-      }
-      fltChanged=true;
-      btnApply.show();
+  isFirstRender=useFirstRender();
+  const fltNames=dtaNames[fid]; //eg, ['dx', 'Control, 'Schizo', ...]
+  if (!fltNames) console.log("FltMList Error: fltNames not found for id: "+fid);
+  const fltSet = dtFilters[fid];
+  if (!fltSet) console.log("FltMList Error: fltSet not found for id: "+fid);
+  const fltCounts = countData[fid];
+  if (!fltCounts) console.log("FltMList Error: fltCounts not found for id: "+fid);
+  if (fltCounts.length!==fltNames.length) 
+    console.log(`FltMList Error: fltCounts length ${fltCounts.length} != fltNames length ${fltNames.length}`);
+  if (onlyStates.length===0) { //creation time 
+    fltNames.slice(1).forEach( ()  => onlyStates += '0' );
+    appliedStates=onlyStates; //states as last applied
+    fltData[0]=fltNames;
+    fltData[1]=fltCounts;
+    fltData[2]=fltSet;
   }
 
-  function scrollShader(t) {
-    var y = t.scrollTop();
-    var p = t.parents('.lg-panel').find('.lg-title');
-    var l = t.parents('.lg-panel').find('.lg-lst');
-    if (y>2) {
-       p.addClass('lg-b-shadow');
+  useEffect(()=> {
+    console.log(`FltMList|${fid}: render with fltData len=${fltData.length}`);
+    if (fltData.length===1) return;
+    if (!jqCreated) {
+      jqRender(fid, fltData);
+      jqCreated=true;
     }
-    else {
-       p.removeClass('lg-b-shadow');
-    }
-    if (y+t.innerHeight()>=l.outerHeight()) {
-      t.removeClass('lg-in-shadow');
-    } else {
-      t.addClass('lg-in-shadow');
-    }
-  }
+  } );
 
-  function addOnlyItem(t) {
-    let p = t.parents('.lg-panel').find('.lg-only');
-    let i = t[0].id;
-    onlyData.push(i);
+  useEffect( () =>  { 
+    //if (isFirstRender) return;
+    jqUpdate(fid);  //update counts only  
+  }, [fltUpdate, fid] );
 
-    if (onlyData.length===1) {
-      let t=p.append('<span class="lg-only-lb">Only</span>');
-      t.children().on('click', function() {
-        onlyData.length=0;
-        let t=$(this);
-        t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
-        t.parent().empty();
-        onlyStates='';
-        fltData.map( () => onlyStates+='0' );
-        filterChanged();
-      } );
-    }
-    p.children().remove('.lg-only-item');
-    onlyData.map( o => p.append('<span class="lg-only-item">'+fltData[o].name+'</span>') );
-
-    onlyStates=strPut(onlyStates, i , '1');
-    filterChanged();
-  }
-
-  function removeOnlyItem(t) {
-    let p = t.parents('.lg-panel').find('.lg-only');
-    let i = t[0].id;
-    //remove item with value i from onlyData
-    let ix=onlyData.indexOf(i);
-    if (ix>=0) onlyData.splice(ix, 1);
-
-    if (onlyData.length>0) {
-      p.children().remove('.lg-only-item');
-      onlyData.map( o => p.append('<span class="lg-only-item">'+fltData[o].name+'</span>') );
-    } else p.empty();
-    onlyStates=strPut(onlyStates, i , '0');
-    filterChanged();
-  }
-
-  function populateList(id, dta) {
-    /* <li class="d-flex justify-content-between lg-item">
-      First one <span class="badge-primary badge-pill lg-count">24</span>
-      </li> */
-    $('#'+id+' .lg-lst').append(
-      $.map(dta, function(d,i) { 
-         return '<li class="d-flex justify-content-between lg-item" id="'+i+'">'+d.name+
-           ' <span class="badge-primary badge-pill lg-count">'+d.num+'</span>'+
-           "</li>\n";
-      }).join(''));
-  }
-
-  // --- render FltMList ---
+   // --- render FltMList ---
   return (
       <div className="row">
        <div className="lg-panel" id={props.id}>
@@ -178,6 +88,172 @@ function FltMList( props ) {
        </div>
       </div>
      )
+}
+
+
+function populateList(id, dta) {
+  //dta is [fltNames, fltCounts, fltSet]
+  /* <li class="d-flex justify-content-between lg-item">
+    First one <span class="badge-primary badge-pill lg-count">24</span>
+    </li> */
+  $('#'+id+' .lg-lst').append(
+    $.map(dta[0], function(d,i) { 
+       return i ? '<li class="d-flex justify-content-between lg-item" id="'+i+'">'+d+
+         ' <span class="badge-primary badge-pill lg-count">'+dta[1][i]+'</span>'+
+         "</li>\n" : '';
+    }).join(''));
+}
+
+
+function jqUpdate(id) { //update values from mxVals
+  if (isFirstRender || fltData.length===0 || fltData[1].length<=1) return;
+  $('#'+id+' .lg-lst').children().each( 
+    function (i, li) {
+      var el= $(li).find('.lg-count');
+      el.html(fltData[1][i+1]);
+   });
+}
+
+function jqRender(id, dta) {
+  if (onlyStates.length) return; //no need to re-render
+  populateList(id, dta);
+  let jc=$('#'+id);
+  jc.on('click', '.lg-title', function(e) {
+      var t = $(this);
+      var p = t.parents('.lg-panel').find('.lg-scroller');
+      if(!t.hasClass('lg-collapsed')) {
+        p.collapse('hide');
+        t.addClass('lg-collapsed');
+        t.removeClass('lg-b-shadow');
+        t.find('.coll-glyph').html("&#x25BD;")
+        //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
+      } else {
+        p.collapse('show');
+        t.removeClass('lg-collapsed');
+        scrollShader(p);
+        t.find('.coll-glyph').html("&#x25B3;")
+        //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
+      }
+    });
+
+    jc.on('click', '.lg-item', function(e) {
+      var t = $(this);
+      if(!t.hasClass('lg-sel')) {
+      //var p=$this.parents('.panel').find('.panel-body');
+      t.addClass('lg-sel');
+      addOnlyItem(t);
+      //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
+    } else {
+      t.removeClass('lg-sel');
+      //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
+      removeOnlyItem(t);
+    }
+  });
+
+  let jscroller=$('#'+id+' .lg-scroller');
+  scrollShader(jscroller);
+  jscroller.on('scroll', (e) => scrollShader($(e.target)) );
+
+  btnApply = jc.find('.lg-apply');
+  btnApply.on('click', function(e) {
+    //actually apply the changes
+     $(this).hide();
+     applyFilter(); //onlyStates string is applied
+     e.stopPropagation();
+  });
+
+  btnApply.hide();
+
+}
+
+function applyFilter() { 
+  //onlyCounts string should be applied
+  if (onlyData.length===onlyStates.length) {
+    //all selected means none selected
+    onlyStates='';
+    fltData[0].slice(1).forEach( ()  => onlyStates += '0' );
+    onlyData.length=0;
+  }
+  if (fltData[0][0]==='sex') {
+       fltData[2]='';
+       if (onlyData.length) fltData[2]=dtaNames.sexIdx[onlyData[0]];
+  } else { //all other filters have sets
+     fltData[2].clear();
+     onlyData.forEach ( o => fltData[2].add(o) );
+  }
+ 
+  appliedStates=onlyStates;
+  updateCounts();
+  notifyUpdate(); //broadcast the new counts update to other components
+}
+
+function filterChanged() { //must apply it
+    if (onlyStates===appliedStates) {
+      btnApply.hide();
+      return;
+    }
+    btnApply.show();
+}
+
+function scrollShader(t) {
+  var y = t.scrollTop();
+  var p = t.parents('.lg-panel').find('.lg-title');
+  var l = t.parents('.lg-panel').find('.lg-lst');
+  if (y>2) {
+     p.addClass('lg-b-shadow');
+  }
+  else {
+     p.removeClass('lg-b-shadow');
+  }
+  if (y+t.innerHeight()>=l.outerHeight()) {
+    t.removeClass('lg-in-shadow');
+  } else {
+    t.addClass('lg-in-shadow');
+  }
+}
+
+function addOnlyItem(t) {
+  let p = t.parents('.lg-panel').find('.lg-only');
+  let i = parseInt(t[0].id); //1-based index
+  onlyData.push(i); 
+
+  if (onlyData.length===1) { //first item added
+    let t=p.append('<span class="lg-only-lb">Only</span>');
+
+    t.children().on('click', function() {
+      //click on the 'only' word clears the filter!
+      onlyData.length=0;
+      let t=$(this);
+      t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
+      t.parent().empty();
+      onlyStates='';
+      fltData.map( () => onlyStates+='0' );
+      filterChanged();
+    } );
+  }
+  p.children().remove('.lg-only-item'); //remove all
+  onlyData.sort((a, b) => a - b);
+  onlyData.forEach( function(o) { 
+    p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') 
+  });
+
+  onlyStates=strPut(onlyStates, i-1 , '1');
+  filterChanged();
+}
+
+function removeOnlyItem(t) {
+  let p = t.parents('.lg-panel').find('.lg-only');
+  let i = parseInt(t[0].id); //1-based index
+  //remove item with value i from onlyData
+  let ix=onlyData.indexOf(i);
+  if (ix>=0) onlyData.splice(ix, 1);
+
+  if (onlyData.length>0) {
+    p.children().remove('.lg-only-item'); //remove all items, re-add them
+    onlyData.map( o => p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') );
+  } else p.empty();
+  onlyStates=strPut(onlyStates, i-1 , '0');
+  filterChanged();
 }
 
 export default FltMList
