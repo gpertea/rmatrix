@@ -8,7 +8,7 @@ import RMatrix from './components/RMatrix';
 import RSelTotal from './components/RSelTotal';
 
 import FltMList from './components/FltMList';
-import {RDataProvider, FltCtxProvider, useFltCtxUpdate, updateCounts} from './components/RDataCtx';
+import {RDataProvider, FltCtxProvider, useFltCtxUpdate, useRData, updateCounts} from './components/RDataCtx';
 import {RSelProvider} from './components/RSelCtx';
 //import {FltDataProvider} from './components/FltDataCtx';
 
@@ -25,14 +25,15 @@ function Header() {
 }
 
 
-function UpdateButton() {
-
+function RefreshButton() {
+  
+  const [selXType, xdata, countData] = useRData();
   const notifyFltUpdate=useFltCtxUpdate();
 
   function ClickUpdate() {
     updateCounts();
     console.log('sending notifyFltUpdate');
-    notifyFltUpdate(); 
+    notifyFltUpdate('test'); 
   }
 
   return (<div>
@@ -46,14 +47,12 @@ function App() {
     <>
     <div className="container-fluid"> 
       <Header />
-
       <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
       <FltCtxProvider>
+      <RDataProvider>
         <div className="col bg-light my-sidebar">
-         <UpdateButton/>
-     {/*     <FltDataProvider>
-            <FltMList id="dx" />
-     */}      
+         <RefreshButton/>
+         <FltMList id="dx" />
 {/*       <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="filterRace" />
@@ -71,17 +70,17 @@ function App() {
        </div>
        <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">
-          <RDataProvider>
+         
           <RSelProvider>
              <RMatrix />
              <RSelTotal />
            </RSelProvider>
-          </RDataProvider>
          </div>
 
         <br/> <br/> <br/> 
         <br/>
       </div>
+      </RDataProvider>
       </FltCtxProvider>
     </div>
     

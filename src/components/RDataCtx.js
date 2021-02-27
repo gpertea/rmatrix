@@ -326,22 +326,27 @@ export function useFltCtxUpdate() {
 }
 
 export function FltCtxProvider (props) {
-    // fltUpdated is just a flip-flop state
+    // fltUpdated is [fltId, fltFlip]  
     // so notifyFltChange is just a state change notifier and 
-    // should be called after calling updateCounts()
+    // should be called after calling updateCounts(fltId)
     // so dtCounts global object should have been updated already
-    const [fltUpdated,  notifyFltChange] = useState(false)
-    //console.log("FltContextProvider state change: "+fltUpdated);
+    const [fltUpdInfo,  notifyFltChange] = useState(['dx', false])
+    console.log(`FltCtxProvider state change (${fltUpdInfo})`);
+    if (fltUpdInfo) {
+      const [fltUpdId, fltFlip] = fltUpdInfo;
+      console.log(`FltCtxProvider state change: ${fltUpdId} (${fltFlip})`);
+    }
     
-    //-- this should be called by the context consumer
-    //   to signal an update of dtCounts after filters are applied
-    function updateSignal() {
-      notifyFltChange( s => !s);
+    //-- this should be called by the context consumer (filter being changed)
+    //   to signal an update of dtCounts after that filter is applied
+    function filterUpdated(fId) { //flip update and set fId
+      console.log(`FltCtxProvider: requested update of [${fltUpdInfo}] by "${fId}"`);
+      notifyFltChange( s => [ fId,  !s[1]]);
     }
 
     return (
-     <FltCtx.Provider value={fltUpdated}>
-         <FltCtxUpdate.Provider value={updateSignal}>
+     <FltCtx.Provider value={fltUpdInfo}>
+         <FltCtxUpdate.Provider value={filterUpdated}>
              {props.children}
          </FltCtxUpdate.Provider>
      </FltCtx.Provider>

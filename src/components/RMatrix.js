@@ -26,9 +26,9 @@ var isFirstRender=false;
 
 function RMatrix( props ) {
     const [selXType, xdata, counts] = useRData();
-    const fltUpdate = useFltCtx(); //fltUpd is just a flip-flop
+    const [fltUpdId, fltFlip] = useFltCtx(); //fltUpd is just a [fltId, fltFlip]
     isFirstRender=useFirstRender(); //only true for the first render!
-    console.log(`RMatrix rendering requested: fltUpdate=${fltUpdate} data length: ${xdata.length}`);
+    console.log(`RMatrix rendering requested: fltUpdId=<${fltUpdId}> flip=${fltFlip}, data len=${xdata.length}`);
     //const setSelDataFunc = useRSelUpdate();
     setSelData = useRSelUpdate();
 
@@ -44,7 +44,7 @@ function RMatrix( props ) {
         useEffect( () =>  { 
            //if (isFirstRender) return;
            jqUpdate();    
-        }, [fltUpdate] );
+        }, [fltFlip] );
 
 
     if (xdata.length===0) return (<div>. . . L O A D I N G . . . </div>);

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useRef} from 'react'
 import './FltMList.css'
 import {  rGlobs, dtaNames, useFirstRender, useRData, 
          dtFilters, useFltCtx, useFltCtxUpdate, updateCounts } from './RDataCtx';
@@ -17,29 +17,35 @@ function strPut(s, i, c) {
   return r;
 }
 
-// these should persist between rerenders
-const onlyData=[]; //array with only selected indexes
-var onlyStates=''; //changing/current selected states
-var appliedStates='' // states as last applied
-var jqCreated=false;
-var isFirstRender=false;
-
-var btnApply=null;
-var notifyUpdate=null;
-
-const fltData=[]; //[fltNames, fltCounts, fltSet]
-                  //     0,       1,        2
 //filtering multi-select list component 
 function FltMList( props ) {
 
+  // these should persist between re-renders, but should also be 
+  const flDt = useRef ({
+    onlyDt:[], //onlyData
+    onlySt:[''], //onlyStates
+    appSt:[''], //appliedStates
+    fltDta:[], //[fltNames, fltCounts, fltSet]
+    jqCr: [false],
+    btnApp: [null]
+  });
+  const onlyData=flDt.current.onlyDt; //array with only selected indexes
+  const onlyStates=flDt.current.onlySt; //changing/current selected states
+  const appliedStates=flDt.current.appSt; // selected set as last applied
+  const jqCreated=flDt.current.jqCr;
+  const btnApply=flDt.current.btnApp;
+
+  const fltData=flDt.current.fltDta; //[fltNames, fltCounts, fltSet]
+                                        //     0        1         2
   const [selXType, xdata, countData] = useRData();
 
   //callback to use to inform other consumers of an applied filter:
-  notifyUpdate = useFltCtxUpdate(); 
-  const fltUpdate = useFltCtx(); //external update, should update these counts
+  const notifyUpdate = useFltCtxUpdate(); 
+  const [fltUpdId, fltFlip] = useFltCtx(); //external update, should update these counts
   const fid=props.id;
 
-  isFirstRender=useFirstRender();
+  //const isFirstRender=useFirstRender();
+
   const fltNames=dtaNames[fid]; //eg, ['dx', 'Control, 'Schizo', ...]
   if (!fltNames) console.log("FltMList Error: fltNames not found for id: "+fid);
   const fltSet = dtFilters[fid];
@@ -48,27 +54,141 @@ function FltMList( props ) {
   if (!fltCounts) console.log("FltMList Error: fltCounts not found for id: "+fid);
   if (fltCounts.length!==fltNames.length) 
     console.log(`FltMList Error: fltCounts length ${fltCounts.length} != fltNames length ${fltNames.length}`);
-  if (onlyStates.length===0) { //creation time 
-    fltNames.slice(1).forEach( ()  => onlyStates += '0' );
-    appliedStates=onlyStates; //states as last applied
+  if (onlyStates[0].length===0) { //creation time 
+    fltNames.slice(1).forEach( ()  => onlyStates[0] += '0' );
+    appliedStates[0]=onlyStates[0]; //states as last applied
+    console.log(`FltMList ${fid} creation..`);
     fltData[0]=fltNames;
     fltData[1]=fltCounts;
     fltData[2]=fltSet;
   }
 
   useEffect(()=> {
-    console.log(`FltMList|${fid}: render with fltData len=${fltData.length}`);
-    if (fltData.length===1) return;
-    if (!jqCreated) {
-      jqRender(fid, fltData);
-      jqCreated=true;
+    console.log(`FltMList ${fid}: render with fltData len=${fltData[0].length}, already created=${jqCreated}`);
+    if (fltData.length===0 || fltData[0].length===1) return;
+    if (!jqCreated[0]) {
+      let jc=jqRender(fid, fltData, notifyUpdate);
+      addClickHandler(jc);
+      addApplyButton(jc);
+      jqCreated[0]=true;
     }
   } );
 
   useEffect( () =>  { 
+
+    function jqUpdate() { //update values from mxVals
+      if (fltData.length===0 || fltData[1].length<=1) return;
+      $('#'+fid+' .lg-lst').children().each( 
+        function (i, li) {
+          var el= $(li).find('.lg-count');
+          el.html(fltData[1][i+1]);
+       });
+    }
+  
     //if (isFirstRender) return;
-    jqUpdate(fid);  //update counts only  
-  }, [fltUpdate, fid] );
+    //-- no need to update if the update was due to self
+    if (fid===fltUpdId) return; //self-inflicted update, don't change the counts
+    jqUpdate();  //update counts only  
+  }, [fltFlip, fid, fltUpdId, fltData] );
+
+  function addApplyButton(jc) {
+    btnApply[0] = jc.find('.lg-apply');
+    btnApply[0].on('click', function(e) {
+      //actually apply the changes
+       $(this).hide();
+       applyFilter(); //onlyStates string is applied
+       e.stopPropagation();
+    });
+    btnApply[0].hide();
+  }
+  
+  function applyFilter() { 
+    //onlyCounts string should be applied
+    if (onlyData.length===onlyStates[0].length) {
+      //all selected means none selected
+      onlyStates[0]='';
+      fltData[0].slice(1).forEach( ()  => onlyStates[0] += '0' );
+      onlyData.length=0;
+    }
+    if (fltData[0][0]==='sex') {
+         fltData[2]='';
+         if (onlyData.length) 
+            fltData[2]=dtaNames.sexIdx[onlyData[0]];
+    } else { //all other filters have sets
+       fltData[2].clear();
+       onlyData.forEach ( o => fltData[2].add(o) );
+    }
+   
+    appliedStates[0]=onlyStates[0];
+    updateCounts();
+    notifyUpdate(fid); //broadcast the new counts update to other components
+  }
+  
+  function filterChanged() { //must apply it
+      if (onlyStates[0]===appliedStates[0]) {
+        btnApply[0].hide();
+        return;
+      }
+      btnApply[0].show();
+  }
+  
+  function addOnlyItem(t) {
+    let p = t.parents('.lg-panel').find('.lg-only');
+    let i = parseInt(t[0].id); //1-based index
+    onlyData.push(i); 
+  
+    if (onlyData.length===1) { //first item added
+      let t=p.append('<span class="lg-only-lb">Only</span>');
+      t.children().on('click', function() {
+        //click on the 'only' word clears the filter!
+        onlyData.length=0;
+        let t=$(this);
+        t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
+        t.parent().empty();
+        onlyStates[0]='';
+        fltData.map( () => onlyStates[0]+='0' );
+        filterChanged();
+      } );
+    }
+    p.children().remove('.lg-only-item'); //remove all
+    onlyData.sort((a, b) => a - b);
+    onlyData.forEach( function(o) { 
+      p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') 
+    });
+    onlyStates[0]=strPut(onlyStates[0], i-1 , '1');
+    filterChanged();
+  }
+  
+  function removeOnlyItem(t) {
+    let p = t.parents('.lg-panel').find('.lg-only');
+    let i = parseInt(t[0].id); //1-based index
+    //remove item with value i from onlyData
+    let ix=onlyData.indexOf(i);
+    if (ix>=0) onlyData.splice(ix, 1);
+    if (onlyData.length>0) {
+      p.children().remove('.lg-only-item'); //remove all items, re-add them
+      onlyData.map( o => p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') );
+    } else p.empty();
+    onlyStates[0]=strPut(onlyStates[0], i-1 , '0');
+    filterChanged();
+  }
+  
+  function addClickHandler(jc) {
+    jc.on('click', '.lg-item', function(e) {
+      var t = $(this);
+      if(!t.hasClass('lg-sel')) {
+      //var p=$this.parents('.panel').find('.panel-body');
+      t.addClass('lg-sel');
+      addOnlyItem(t);
+      //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
+    } else {
+      t.removeClass('lg-sel');
+      //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
+      removeOnlyItem(t);
+    }
+  });
+}
+
 
    // --- render FltMList ---
   return (
@@ -90,7 +210,6 @@ function FltMList( props ) {
      )
 }
 
-
 function populateList(id, dta) {
   //dta is [fltNames, fltCounts, fltSet]
   /* <li class="d-flex justify-content-between lg-item">
@@ -104,18 +223,7 @@ function populateList(id, dta) {
     }).join(''));
 }
 
-
-function jqUpdate(id) { //update values from mxVals
-  if (isFirstRender || fltData.length===0 || fltData[1].length<=1) return;
-  $('#'+id+' .lg-lst').children().each( 
-    function (i, li) {
-      var el= $(li).find('.lg-count');
-      el.html(fltData[1][i+1]);
-   });
-}
-
 function jqRender(id, dta) {
-  if (onlyStates.length) return; //no need to re-render
   populateList(id, dta);
   let jc=$('#'+id);
   jc.on('click', '.lg-title', function(e) {
@@ -135,65 +243,12 @@ function jqRender(id, dta) {
         //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
       }
     });
-
-    jc.on('click', '.lg-item', function(e) {
-      var t = $(this);
-      if(!t.hasClass('lg-sel')) {
-      //var p=$this.parents('.panel').find('.panel-body');
-      t.addClass('lg-sel');
-      addOnlyItem(t);
-      //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
-    } else {
-      t.removeClass('lg-sel');
-      //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
-      removeOnlyItem(t);
-    }
-  });
-
   let jscroller=$('#'+id+' .lg-scroller');
   scrollShader(jscroller);
   jscroller.on('scroll', (e) => scrollShader($(e.target)) );
-
-  btnApply = jc.find('.lg-apply');
-  btnApply.on('click', function(e) {
-    //actually apply the changes
-     $(this).hide();
-     applyFilter(); //onlyStates string is applied
-     e.stopPropagation();
-  });
-
-  btnApply.hide();
-
+  return jc;
 }
 
-function applyFilter() { 
-  //onlyCounts string should be applied
-  if (onlyData.length===onlyStates.length) {
-    //all selected means none selected
-    onlyStates='';
-    fltData[0].slice(1).forEach( ()  => onlyStates += '0' );
-    onlyData.length=0;
-  }
-  if (fltData[0][0]==='sex') {
-       fltData[2]='';
-       if (onlyData.length) fltData[2]=dtaNames.sexIdx[onlyData[0]];
-  } else { //all other filters have sets
-     fltData[2].clear();
-     onlyData.forEach ( o => fltData[2].add(o) );
-  }
- 
-  appliedStates=onlyStates;
-  updateCounts();
-  notifyUpdate(); //broadcast the new counts update to other components
-}
-
-function filterChanged() { //must apply it
-    if (onlyStates===appliedStates) {
-      btnApply.hide();
-      return;
-    }
-    btnApply.show();
-}
 
 function scrollShader(t) {
   var y = t.scrollTop();
@@ -210,50 +265,6 @@ function scrollShader(t) {
   } else {
     t.addClass('lg-in-shadow');
   }
-}
-
-function addOnlyItem(t) {
-  let p = t.parents('.lg-panel').find('.lg-only');
-  let i = parseInt(t[0].id); //1-based index
-  onlyData.push(i); 
-
-  if (onlyData.length===1) { //first item added
-    let t=p.append('<span class="lg-only-lb">Only</span>');
-
-    t.children().on('click', function() {
-      //click on the 'only' word clears the filter!
-      onlyData.length=0;
-      let t=$(this);
-      t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
-      t.parent().empty();
-      onlyStates='';
-      fltData.map( () => onlyStates+='0' );
-      filterChanged();
-    } );
-  }
-  p.children().remove('.lg-only-item'); //remove all
-  onlyData.sort((a, b) => a - b);
-  onlyData.forEach( function(o) { 
-    p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') 
-  });
-
-  onlyStates=strPut(onlyStates, i-1 , '1');
-  filterChanged();
-}
-
-function removeOnlyItem(t) {
-  let p = t.parents('.lg-panel').find('.lg-only');
-  let i = parseInt(t[0].id); //1-based index
-  //remove item with value i from onlyData
-  let ix=onlyData.indexOf(i);
-  if (ix>=0) onlyData.splice(ix, 1);
-
-  if (onlyData.length>0) {
-    p.children().remove('.lg-only-item'); //remove all items, re-add them
-    onlyData.map( o => p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') );
-  } else p.empty();
-  onlyStates=strPut(onlyStates, i-1 , '0');
-  filterChanged();
 }
 
 export default FltMList
