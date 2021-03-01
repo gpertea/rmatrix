@@ -47,10 +47,11 @@ function App() {
     <>
     <div className="container-fluid"> 
       <Header />
-      <div className="row justify-content-center bg-light" style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
+      <div className="row justify-content-center bg-light" 
+           style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
       <FltCtxProvider>
       <RDataProvider>
-        <div className="col bg-light my-sidebar">
+        <div className="col bg-light overflow-auto my-sidebar">
            <RefreshButton/>
           <div className="row" style={{height: "2em"}}> </div>
           <div className="row">
@@ -80,7 +81,7 @@ function App() {
  */}     
  {/*  </FltDataProvider> */}
        </div>
-       <div className="col bg-light">
+       <div className="col bg-light" style={{border: "1px solid red"}}>
         <div className="col matrixWrap mx-auto ">
          
           <RSelProvider>
@@ -88,9 +89,6 @@ function App() {
              <RSelTotal />
            </RSelProvider>
          </div>
-
-        <br/> <br/> <br/> 
-        <br/>
       </div>
       </RDataProvider>
       </FltCtxProvider>

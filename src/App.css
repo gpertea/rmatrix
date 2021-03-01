@@ -3,10 +3,11 @@ body {
   font-size: .875rem;
 }
 
-html,body { height:100%;  }
+/* html,body { height:100%;  } */
 
 .my-header {
   /* border-bottom: 1px solid #ddd; */
+  height:60px;
   margin-left:-15px;
   margin-right:-15px;
   /*
@@ -22,8 +23,8 @@ html,body { height:100%;  }
   max-width: 24rem;
   padding:0.2rem 0.4rem;
   border-right:1px solid #ddd;
-  overflow-x:hidden;
-  overflow-y: scroll;  
+  height: calc(100vh - 68px) !important;
+  overflow-x:hidden !important;
 } 
 
 .matrixWrap {
