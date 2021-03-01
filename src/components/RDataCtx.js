@@ -21,7 +21,10 @@ export const mxMaxVal = 546;
 export const dtaNames = { 
     reg : ['reg'], // push allData.regions names, index MUST match their IDs
     dx : ['dx' ], //push allData.dx names, index MUST match their IDs in the dtaXd[x] arr rows
-    dset: [ 'dset' ], //push allData.dset names and public flag
+    dset: [ 'dset' ], //push allData.dset names 
+    dsetp: ['dsetp'], //push allData.dset public flag + 1 (so this will only have 1s and 2s)
+    dspub: [ 'dspub', 'restricted', 'public'],
+    dspubIdx: { "restricted":1, 'public': 2 }, 
     race : [ 'race', "AA", "AS", "CAUC", "HISP", "Other" ],
     raceIdx : { "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 },
     sex : [ 'sex', "F", "M" ],
@@ -45,7 +48,9 @@ dtaXall : array of arrays of experiment metadata (samples), one array of rows fo
       ... 
     ]
 dtaNames.dx  : array of dx names, dtaDx[0]='dx' followed by dtaDx[dx-code]="dx-name"
-dtaNames.dset : array of dataset names and public flag, dtaDSet[0]='dset' and dtaDSet[ds-code]=["ds-name", isPublic]
+dtaNames.dset : array of dataset names  dtaDSet[0]='dset' and dtaDSet[ds-code]="ds-name"
+dtaNames.dsetp : array of dataset names public flags dtaDSet[0]='dsetp' then dtaDSet[ds-code]=1 or 1
+dtaNames.dspub: ['dspub', 'restricted', 'public']
 dtaNames.reg : array of region names dtaReg[0]='reg' and dtaDSet[reg-code]="reg-name"
   
  --------  2nd tier (dynamic, filter-dependent sample counts) ---
@@ -76,62 +81,51 @@ export const dtCounts = {
    reg: [ ], //array of arrays (exp_types x regions)
     dx: ['dx'], 
   dset: ['dset'], 
+  dspub: ['dspub'], //will push counts for restricted and then public datasets
   race: ['race'],
   age: ['age'], // will push counts for each age range in dtaAgeRanges
   sex: ['sex'] //+ F-counts, M-counts
 }
 //---
 /*  ------- filters reflect the selections in various FltMList ----
-  Filters are generally sets of indexes (-codes) in the various dta* arrays, except for Age, Race and Sex filters
-   dtfDx : Set[ dx-code-1, dx-code-2, ...] 
-   dtfDset : Set[ ds-code-1, ds-code-2, ... ]
-   dtfRace : [ "AA", "CAUC", ...]
-   dtfSex :  '', 'F'  or 'M' 
-   dtfAge : [ [a1, a2], [a3, a4] .. ] set of age ranges
+  Filters are generally sets of indexes in the various dta* arrays, except for the sex filter
+     .dx :  Set[ dx-code-1, dx-code-2, ...] 
+   .dset :  Set[ ds-code-1, ds-code-2, ... ]
+    .age :  [ age-range-idx-1, age-range-idx-2,  .. ] set of indexes in dtAgeRanges
+   .race :  Set[ "AA", "CAUC", ...] 
+    .sex :  '', 'F'  or 'M' 
 */// -- filters, always dynamic, for the currently selected experiment type
 export const dtFilters = {
     dx: new Set(),
   dset: new Set(),
+  dspub: new Set(), //for now it can only be [1] or [2]
    age: new Set(),
-  race: new Set(),
-   sex: '' 
+  race: new Set(), //this has a set of strings ("AA", "CAUC", ...)
+   sex: '' //can only be 'F' or 'M'
 }
 //=======================
-/*
-const dtaRegion = [{"id":1,"name":"Amygdala","num":548}, 
-  {"id":2,"name":"BasoAmyg","num":318}, 
-  {"id":3,"name":"Caudate","num":464}, 
-  {"id":4,"name":"dACC","num":322}, 
-  {"id":5,"name":"DentateGyrus","num":263}, 
-  {"id":6,"name":"DLPFC","num":1599}, 
-  {"id":7,"name":"Habenula","num":69}, 
-  {"id":8,"name":"HIPPO","num":539}, 
-  {"id":9,"name":"MedialAmyg","num":322}, 
-  {"id":10,"name":"mPFC","num":297}, 
-  {"id":11,"name":"NAc","num":235}, 
-  {"id":12,"name":"sACC","num":560}
-];
-*/
 
 export function loadData(allData) {
     //after data was fetched in allData
     
     let nreg=dtaNames.reg;
     allData.regions.forEach( function(it) {
-      if (nreg.length!==it[0]) console.log("Error: mismatch region index in dtaReg!");
-       nreg.push(it[1]);
+      if (nreg.length!==it[0]) console.log("Error: mismatch region index in data!");
+      nreg.push(it[1]);
     });
     console.log("allData fetched:" + nreg);
 
     let ndx=dtaNames.dx;
     allData.dx.forEach( function(it) {
-      if (ndx.length!==it[0]) console.log("Error: mismatch dx index in dtaReg!");
-       ndx.push( it[1] );
+      if (ndx.length!==it[0]) console.log("Error: mismatch dx index in data!");
+      ndx.push( it[1] );
     });
     let nds=dtaNames.dset;
+    let ndsp=dtaNames.dsetp;
     allData.datasets.forEach( function(it) {
-      if (nds.length!==it[0]) console.log("Error: mismatch dataset index in dtaReg!");
-       nds.push( [it[1], it[2] ]);
+      if (nds.length!==it[0]) console.log("Error: mismatch dataset index in data!");
+      nds.push( it[1] );
+      ndsp.push( it[2]+1 ); //simply add public status value code +1  (1=restricted, 2=public)
     });
 
     allData.sdata.forEach( function(it) {
@@ -142,8 +136,8 @@ export function loadData(allData) {
     allData=null;
     rGlobs.selXType=0;
 
-    //initialize counts : just push 0 as necessary
-   ["dx", "dset", "age", "sex", "race"].forEach (
+    //initialize counts : just push 0 
+   ["dx", "dset", "dspub", "age", "sex", "race"].forEach (
     function (e) { 
       let dt=dtCounts[e], z=dtaNames[e].length;
       while(--z) dt.push(0);
@@ -183,6 +177,37 @@ export function loadData(allData) {
 }*/
 const dtaAgeRanges=dtaNames.ageRanges;
 
+export function getFilterData(fid) {
+  const fltNames=dtaNames[fid];
+  const fltCounts=dtCounts[fid];
+  //const fltSet=dtFilters[fid];
+  if (!fltNames) 
+     throw new Error(`Error: could not find data for filter name "${fid}"`);
+  return [fltNames, fltCounts];
+}
+
+export function applyFilterData(fid, fArr) {
+  const fltSet=dtFilters[fid];
+  if (!fltSet)
+     throw new Error(`Error: cannot applyFilterData for "${fid}"`);
+  if (fid==='sex') {
+    dtFilters.sex='';
+    if (fArr.length===1) 
+       dtFilters.sex=dtaNames.sexIdx[fArr[0]];
+    if (fArr.length>1) 
+      throw new Error(`Error: invalid filter set for "${fid}" (${fArr})`);
+  } else { //all other filters have sets
+    fltSet.clear();
+    if (fid==='race') {
+        let dRace=dtaNames.race;
+        fArr.forEach ( o => fltSet.add(dRace[o]) );
+      }
+      else 
+        fArr.forEach ( o => fltSet.add(o) );
+  }
+  updateCounts();
+}
+
 function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge label index
   if (a<0) return 1; //fetal
   let len=dtaAgeRanges.length;
@@ -195,13 +220,14 @@ function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge l
   return 0;
 }
 
-const dtaRaceIdx=dtaNames.raceIdx;
-const dtaSexIdx=dtaNames.sexIdx;
-
+const dtaRaceIdx=dtaNames.raceIdx; //maps race literal to index
+const dtaSexIdx=dtaNames.sexIdx; //maps sex literal to index
+const dsetIdx=dtaNames.dsetp; //maps dataset index to dtCounts.dspub[] index (1 or 2)
 export function updateCounts() {
    //fills all dtn* arrays according to the dtf* filters, from dtaXall[selXType]
    dtXs.length=0; //will populate
-   ["dx", "dset", "age", "sex", "race"].forEach (
+   //reset counts
+   ["dx", "dset", "dspub", "age", "sex", "race"].forEach (
      function (e) {
        let dt=dtCounts[e], z=dt.length;
        while(--z) dt[z]=0;
@@ -215,7 +241,7 @@ export function updateCounts() {
    let selXType=rGlobs.selXType;
    for (let xt=0;xt<dtaXTypes.length;xt++) { //for each exp type
     let aXd=dtaXall[xt];
-    if (!aXd || aXd.length===0) { //no data available for this experiment type
+    if (!aXd || aXd.length===0) { //no data available (yet) for this experiment type
       if (xt===selXType) {
         console.log(`Error: no data found for selXType ${selXType} : ${dtaXTypes[xt]}`);
         continue;
@@ -236,28 +262,33 @@ export function updateCounts() {
         if (dtFilters.dx.size && !dtFilters.dx.has(dx)) continue;
         if (dtFilters.race.size && !dtFilters.race.has(r)) continue;
         if (dtFilters.dset.size && !dtFilters.dset.has(d)) continue;
+        if (dtFilters.dspub.size && !dtFilters.dspub.has(dsetIdx[d])) continue;
         if (dtFilters.sex && dtFilters.sex!==s) continue;
         //TODO: implement public/restricted dataset filter?
         let ax=0;
         if (!dtFilters.age.size) { //any age filter set?
-          ax=age2RangeIdx(rg);
+          ax=age2RangeIdx(a);
           if (dtFilters.age.has(ax)) continue;
         }
         //update region counts for all exp types in the matrix
-        dtCounts.reg[rg][xt]++;
+        dtCounts.reg[rg-1][xt]++;
 
         //only update phenotype counts for selXType 
         if (xt!==selXType) continue;
-        if (ax===0) 
-            ax=age2RangeIdx(rg);
+        if (ax===0)
+            ax=age2RangeIdx(a);
         if (ax===0) console.log("Error: could not get an age range index from age"+rg);
             else dtCounts.age[ax]++;
-        dtCounts.race[dtaRaceIdx[r]]++;
+        let rix=dtaRaceIdx[r];
+        dtCounts.race[rix]++;
+        //if (rix>0) console.log(`incremented counts for race ${r}, rix=${rix}`);
         dtCounts.sex[dtaSexIdx[s]]++;
         dtCounts.dx[dx]++;
         dtCounts.dset[d]++;
+        dtCounts.dspub[dsetIdx[d]]++;
         dtXs.push([sid, d, dx, r, s, a, rg]); //metadata for each sample that passed
     }
+    console.log(`dtCounts.race is: ${dtCounts.race}`);
   }
     //return [selXType, dtXs, dtCounts ] 
 }

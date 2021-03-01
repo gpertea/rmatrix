@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from 'react'
 import './FltMList.css'
-import {  rGlobs, dtaNames, useFirstRender, useRData, 
-         dtFilters, useFltCtx, useFltCtxUpdate, updateCounts } from './RDataCtx';
+import {  rGlobs, useRData, getFilterData, applyFilterData,
+          useFltCtx, useFltCtxUpdate } from './RDataCtx';
 import $, { map } from 'jquery'
 //import Popper from 'popper.js';
 import 'bootstrap/dist/js/bootstrap.bundle.min'
@@ -46,27 +46,24 @@ function FltMList( props ) {
 
   //const isFirstRender=useFirstRender();
 
-  const fltNames=dtaNames[fid]; //eg, ['dx', 'Control, 'Schizo', ...]
-  if (!fltNames) console.log("FltMList Error: fltNames not found for id: "+fid);
-  const fltSet = dtFilters[fid];
-  if (!fltSet) console.log("FltMList Error: fltSet not found for id: "+fid);
-  const fltCounts = countData[fid];
-  if (!fltCounts) console.log("FltMList Error: fltCounts not found for id: "+fid);
+  const [fltNames, fltCounts]=getFilterData(fid); 
   if (fltCounts.length!==fltNames.length) 
-    console.log(`FltMList Error: fltCounts length ${fltCounts.length} != fltNames length ${fltNames.length}`);
+    console.log(`FltMList ${fid} ERROR: fltNames length ${fltNames.length} != fltCounts length ${fltCounts.length}`);
   if (onlyStates[0].length===0) { //creation time 
     fltNames.slice(1).forEach( ()  => onlyStates[0] += '0' );
     appliedStates[0]=onlyStates[0]; //states as last applied
     console.log(`FltMList ${fid} creation..`);
     fltData[0]=fltNames;
     fltData[1]=fltCounts;
-    fltData[2]=fltSet;
   }
 
   useEffect(()=> {
-    console.log(`FltMList ${fid}: render with fltData len=${fltData[0].length}, already created=${jqCreated}`);
-    if (fltData.length===0 || fltData[0].length===1) return;
+    console.log(`FltMList ${fid}: render with fltData len=${fltData[1].length}, already created=${jqCreated}`);
+    //if (jqCreated) 
+    //  console.log(`FltMList ${fid} counts: ${fltData[1]}`);
+    if (fltData.length===0 || fltData[1].length===1) return;
     if (!jqCreated[0]) {
+      console.log(`FltMList ${fid} creating with counts: ${fltData[1]}`);
       let jc=jqRender(fid, fltData, notifyUpdate);
       addClickHandler(jc);
       addApplyButton(jc);
@@ -102,52 +99,57 @@ function FltMList( props ) {
     btnApply[0].hide();
   }
   
+  function clearOnlyStates() {
+    onlyStates[0]='';
+    fltData[0].slice(1).forEach( ()  => onlyStates[0] += '0' );
+    onlyData.length=0;
+  }
+
   function applyFilter() { 
     //onlyCounts string should be applied
     if (onlyData.length===onlyStates[0].length) {
       //all selected means none selected
-      onlyStates[0]='';
-      fltData[0].slice(1).forEach( ()  => onlyStates[0] += '0' );
-      onlyData.length=0;
+      deselectAll(true);
     }
-    if (fltData[0][0]==='sex') {
-         fltData[2]='';
-         if (onlyData.length) 
-            fltData[2]=dtaNames.sexIdx[onlyData[0]];
-    } else { //all other filters have sets
-       fltData[2].clear();
-       onlyData.forEach ( o => fltData[2].add(o) );
-    }
-   
+    applyFilterData(fid, onlyData); //this updates counts, etc.
     appliedStates[0]=onlyStates[0];
-    updateCounts();
     notifyUpdate(fid); //broadcast the new counts update to other components
   }
   
   function filterChanged() { //must apply it
+      if (appliedStates[0].indexOf("1")<0 && 
+          (onlyStates[0].indexOf("0")<0)) {
+            //deal with the silly case when all are selected
+            //deselectAll(true);
+            btnApply[0].hide();
+            return;
+      }
       if (onlyStates[0]===appliedStates[0]) {
         btnApply[0].hide();
         return;
       }
       btnApply[0].show();
   }
-  
+
+  function deselectAll(upd) {
+    clearOnlyStates();
+    $('#'+fid+' .lg-lst').find('.lg-sel').removeClass('lg-sel');
+    //t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
+    $('#'+fid+' .lg-only').empty();
+    if (upd) return;
+    filterChanged();
+  }
+
   function addOnlyItem(t) {
     let p = t.parents('.lg-panel').find('.lg-only');
     let i = parseInt(t[0].id); //1-based index
     onlyData.push(i); 
   
     if (onlyData.length===1) { //first item added
-      let t=p.append('<span class="lg-only-lb">Only</span>');
-      t.children().on('click', function() {
+      let to=p.append('<span class="lg-only-lb">Only</span>');
+      to.children().on('click', function() {
         //click on the 'only' word clears the filter!
-        onlyData.length=0;
-        let t=$(this);
-        t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
-        t.parent().empty();
-        onlyStates[0]='';
-        fltData.map( () => onlyStates[0]+='0' );
-        filterChanged();
+         deselectAll();
       } );
     }
     p.children().remove('.lg-only-item'); //remove all
@@ -156,6 +158,7 @@ function FltMList( props ) {
       p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') 
     });
     onlyStates[0]=strPut(onlyStates[0], i-1 , '1');
+    console.log("only item "+t.html()+" added, onlyStates now "+onlyStates);
     filterChanged();
   }
   
@@ -192,7 +195,6 @@ function FltMList( props ) {
 
    // --- render FltMList ---
   return (
-      <div className="row">
        <div className="lg-panel" id={props.id}>
         <div className="lg-title">{id2name[props.id]}
            <span className="float-right">
@@ -206,12 +208,11 @@ function FltMList( props ) {
         </div>
         <div className="lg-only"></div>
        </div>
-      </div>
      )
 }
 
 function populateList(id, dta) {
-  //dta is [fltNames, fltCounts, fltSet]
+  //dta is [fltNames, fltCounts ]
   /* <li class="d-flex justify-content-between lg-item">
     First one <span class="badge-primary badge-pill lg-count">24</span>
     </li> */

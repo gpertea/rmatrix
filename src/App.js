@@ -36,7 +36,7 @@ function RefreshButton() {
     notifyFltUpdate('test'); 
   }
 
-  return (<div>
+  return (<div className="row justify-content-md-center" style={{height: "2em"}}> 
     <button onClick={ClickUpdate}>Update</button>
     </div>)
 }
@@ -51,19 +51,27 @@ function App() {
       <FltCtxProvider>
       <RDataProvider>
         <div className="col bg-light my-sidebar">
-         <RefreshButton/>
-         <FltMList id="dx" />
-{/*       <div className="row" style={{height: "2em"}}> </div> 
+           <RefreshButton/>
+          <div className="row" style={{height: "2em"}}> </div>
+          <div className="row">
+             <FltMList id="dx" />
+          </div>
+          <div className="row" style={{height: "2em"}}> </div>
           <div className="row"> 
-            <FltMList id="filterRace" />
+            <FltMList id="race" />
           </div> 
           <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
-            <FltMList id="filterSex" />
+            <FltMList id="dset" />
+          </div>
+{/*
+          <div className="row" style={{height: "2em"}}> </div> 
+          <div className="row"> 
+            <FltMList id="sex" />
           </div> 
           <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
-            <FltMList id="filterDataset" />
+            <FltMList id="age" />
           </div> 
  */}     
  {/*  </FltDataProvider> */}
