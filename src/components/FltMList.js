@@ -158,7 +158,6 @@ function FltMList( props ) {
       p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') 
     });
     onlyStates[0]=strPut(onlyStates[0], i-1 , '1');
-    console.log("only item "+t.html()+" added, onlyStates now "+onlyStates);
     filterChanged();
   }
   

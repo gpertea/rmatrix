@@ -53,35 +53,29 @@ function App() {
       <RDataProvider>
         <div className="col bg-light overflow-auto my-sidebar">
            <RefreshButton/>
-          <div className="row" style={{height: "2em"}}> </div>
           <div className="row">
              <FltMList id="dx" />
           </div>
-          <div className="row" style={{height: "2em"}}> </div>
           <div className="row"> 
             <FltMList id="race" />
           </div> 
-          <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="sex" />
           </div>
-          <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="dset" />
           </div>
-{/*
-          <div className="row" style={{height: "2em"}}> </div> 
-          <div className="row"> 
-            <FltMList id="sex" />
-          </div> 
-          <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="age" />
           </div> 
- */}     
+          {/*
+          <div className="row"> 
+            <FltMList id="age" />
+          </div> 
+          */}     
  {/*  </FltDataProvider> */}
        </div>
-       <div className="col bg-light" style={{border: "1px solid red"}}>
+       <div className="col bg-light">
         <div className="col matrixWrap mx-auto ">
          
           <RSelProvider>

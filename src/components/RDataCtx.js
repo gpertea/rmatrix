@@ -190,6 +190,7 @@ export function applyFilterData(fid, fArr) {
   const fltSet=dtFilters[fid];
   if (fltSet==null)
      throw new Error(`Error: cannot applyFilterData for "${fid}"`);
+  console.log(`Applying filter set for "${fid}": (${fArr})`);
   if (fid==='sex') {
     dtFilters.sex='';
     if (fArr.length===1)  {
@@ -240,6 +241,7 @@ export function updateCounts() {
          rd[i].fill(0);
      }
    let selXType=rGlobs.selXType;
+   console.log(`dtFilters.age set to: [${[...dtFilters.age].join(' ')}]`);
    for (let xt=0;xt<dtaXTypes.length;xt++) { //for each exp type
     let aXd=dtaXall[xt];
     if (!aXd || aXd.length===0) { //no data available (yet) for this experiment type
@@ -267,9 +269,11 @@ export function updateCounts() {
         if (dtFilters.sex && dtFilters.sex!==s) continue;
         //TODO: implement public/restricted dataset filter?
         let ax=0;
-        if (!dtFilters.age.size) { //any age filter set?
+        if (dtFilters.age.size) { //any age filter set?
           ax=age2RangeIdx(a);
-          if (dtFilters.age.has(ax)) continue;
+          if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age"+rg);
+          //else if (a<0) console.log(`for ${sid} age ${a} got ax=${ax}`);
+          if (!dtFilters.age.has(ax)) continue;
         }
         //update region counts for all exp types in the matrix
         dtCounts.reg[rg-1][xt]++;
@@ -278,7 +282,7 @@ export function updateCounts() {
         if (xt!==selXType) continue;
         if (ax===0)
             ax=age2RangeIdx(a);
-        if (ax===0) console.log("Error: could not get an age range index from age"+rg);
+        if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age"+rg);
             else dtCounts.age[ax]++;
         let rix=dtaRaceIdx[r];
         dtCounts.race[rix]++;
