@@ -188,13 +188,14 @@ export function getFilterData(fid) {
 
 export function applyFilterData(fid, fArr) {
   const fltSet=dtFilters[fid];
-  if (!fltSet)
+  if (fltSet==null)
      throw new Error(`Error: cannot applyFilterData for "${fid}"`);
   if (fid==='sex') {
     dtFilters.sex='';
-    if (fArr.length===1) 
-       dtFilters.sex=dtaNames.sexIdx[fArr[0]];
-    if (fArr.length>1) 
+    if (fArr.length===1)  {
+       dtFilters.sex=dtaNames.sex[fArr[0]];
+      }
+    else if (fArr.length>1) 
       throw new Error(`Error: invalid filter set for "${fid}" (${fArr})`);
   } else { //all other filters have sets
     fltSet.clear();

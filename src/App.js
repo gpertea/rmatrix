@@ -37,7 +37,7 @@ function RefreshButton() {
   }
 
   return (<div className="row justify-content-md-center" style={{height: "2em"}}> 
-    <button onClick={ClickUpdate}>Update</button>
+    <button onClick={ClickUpdate}>Force Update</button>
     </div>)
 }
 
@@ -60,6 +60,10 @@ function App() {
           <div className="row"> 
             <FltMList id="race" />
           </div> 
+          <div className="row" style={{height: "2em"}}> </div> 
+          <div className="row"> 
+            <FltMList id="sex" />
+          </div>
           <div className="row" style={{height: "2em"}}> </div> 
           <div className="row"> 
             <FltMList id="dset" />

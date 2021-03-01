@@ -198,7 +198,7 @@ function FltMList( props ) {
        <div className="lg-panel" id={props.id}>
         <div className="lg-title">{id2name[props.id]}
            <span className="float-right">
-             <span className="lg-apply">apply filter</span>
+             <span className="lg-apply">Apply</span>
              <span className="coll-glyph">&#x25B3;</span>
            </span>
         </div>
@@ -227,6 +227,7 @@ function populateList(id, dta) {
 function jqRender(id, dta) {
   populateList(id, dta);
   let jc=$('#'+id);
+  
   jc.on('click', '.lg-title', function(e) {
       var t = $(this);
       var p = t.parents('.lg-panel').find('.lg-scroller');

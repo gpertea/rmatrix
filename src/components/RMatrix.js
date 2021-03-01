@@ -52,7 +52,7 @@ function RMatrix( props ) {
     return (
         <>
         <div className="col matrixWrap mx-auto">
-          <h4 style={{marginLeft: "-2.4em"}}>Region Matrix</h4>
+          <h4 style={{marginLeft: "-2.4rem", marginBottom: "-1.6rem"}}>Region Matrix</h4>
           <table id="rxMatrix">
             <thead>
               

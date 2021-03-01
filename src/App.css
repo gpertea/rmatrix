@@ -18,14 +18,17 @@ html,body { height:100%;  }
 }
 
 .my-sidebar {
-  width: 300px;
-  padding:0.6em 0.8em;
+  width: 24rem;
+  max-width: 24rem;
+  padding:0.2rem 0.4rem;
   border-right:1px solid #ddd;
-  max-width:300px;
+  overflow-x:hidden;
+  overflow-y: scroll;  
 } 
 
 .matrixWrap {
   display: flex;
+  margin-top:1.2rem;
   flex-direction: column;
   justify-content: space-around;
   max-width: 50vw;
