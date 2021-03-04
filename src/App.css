@@ -46,6 +46,16 @@ body {
      flex-basis: 3em;
 }
 
+.sel-total {
+   display:inline-block;
+   text-align:center;
+   font-size:1rem;   
+   font-weight:bold;
+   color: #ed1848;
+   background-color:#fff;
+   width:5rem;
+}
+
 .bi::before {
   display: inline-block;
   content: "";

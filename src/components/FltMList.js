@@ -210,7 +210,7 @@ function FltMList( props ) {
         <div className="lg-title">{id2name[props.id]}
            <span className="float-right">
              <span className="lg-apply">Apply</span>
-             <span className="coll-glyph">&#x25B3;</span>
+             <span className="coll-glyph"></span>
            </span>
         </div>
         <div className="collapse show lg-scroller lg-in-shadow">
@@ -238,7 +238,7 @@ function populateList(id, dta) {
 function jqRender(id, dta) {
   populateList(id, dta);
   let jc=$('#'+id);
-  
+  jc.find('.coll-glyph').html(arrowLeft);
   jc.on('click', '.lg-title', function(e) {
       var t = $(this);
       var p = t.parents('.lg-panel').find('.lg-scroller');

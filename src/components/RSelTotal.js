@@ -11,12 +11,9 @@ function RSelTotal() {
        if (selregs[i]) total+=mxvals[i][selcol-1];
      }
    }
-  return (
-    <div className="row" style={{paddingTop: "1em"}} >
-      <div className="col">
-        <span>Total selected samples: <b>{total}</b></span>
-      </div>
-    </div>
+  return (<div>
+        <span style={{fontSize:"1rem"}}><b>Total selected samples:</b></span><span class="sel-total">{total}</span>
+        </div>
   )
 }
 

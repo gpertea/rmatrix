@@ -80,8 +80,23 @@ function App() {
          
           <RSelProvider>
              <RMatrix />
-             <RSelTotal />
+             <div className="row" style={{paddingTop: "1em"}} >
+               <div className="col">
+                <RSelTotal />
+               </div>
+             </div> 
+             <div className="row" style={{paddingTop: "1em"}} >
+             <div className="col-4">
+             </div>
+              <div className="col-3">
+               <button class="bg-white btn shadow-sm">Download</button>
+              </div>
+              <div className="col-2">
+               <button class="bg-white btn shadow-sm">Explore</button>
+              </div>
+             </div>
            </RSelProvider>
+
          </div>
       </div>
       </RDataProvider>
