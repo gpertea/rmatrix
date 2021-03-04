@@ -22,7 +22,7 @@ body {
   width: 24rem;
   max-width: 24rem;
   padding:0.2rem 0.4rem;
-  background-color: #d8dadc;
+  /* background-color: #d8dadc; */
   border-right:1px solid #ccc;
   height: calc(100vh - 68px) !important;
   overflow-x:hidden !important;
@@ -44,5 +44,14 @@ body {
      margin-top:1.6em;
      padding-left: 1em;
      flex-basis: 3em;
+}
+
+.bi::before {
+  display: inline-block;
+  content: "";
+  vertical-align: -.125em;
+  background-image: url("data:image/svg+xml,<svg viewBox='0 0 16 16' fill='%23333' xmlns='http://www.w3.org/2000/svg'><path fill-rule='evenodd' d='M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z' clip-rule='evenodd'/></svg>");
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
 }
 

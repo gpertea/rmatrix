@@ -16,6 +16,19 @@ function strPut(s, i, c) {
   let r=s.substring(0, i).concat(c, s.substring(i+1));
   return r;
 }
+//caret-left-fill icon
+const arrowLeft=`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-left-fill" viewBox="0 0 16 16">
+<path d="M3.86 8.753l5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z"/>
+</svg>`;
+//carret-down-fill
+const arrowDown=`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+  <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+</svg>`;
+//caret-up (empty)
+const arrowUp=`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up" viewBox="0 0 16 16">
+<path d="M3.204 11h9.592L8 5.519 3.204 11zm-.753-.659l4.796-5.48a1 1 0 0 1 1.506 0l4.796 5.48c.566.647.106 1.659-.753 1.659H3.204a1 1 0 0 1-.753-1.659z"/>
+</svg>`;
+
 
 //filtering multi-select list component 
 function FltMList( props ) {
@@ -233,13 +246,15 @@ function jqRender(id, dta) {
         p.collapse('hide');
         t.addClass('lg-collapsed');
         t.removeClass('lg-b-shadow');
-        t.find('.coll-glyph').html("&#x25BD;")
+        //t.find('.coll-glyph').html("&#x25BD;")
+        t.find('.coll-glyph').html(arrowDown);
         //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
       } else {
         p.collapse('show');
         t.removeClass('lg-collapsed');
         scrollShader(p);
-        t.find('.coll-glyph').html("&#x25B3;")
+        //t.find('.coll-glyph').html("&#x25B3;")
+        t.find('.coll-glyph').html(arrowLeft)
         //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
       }
     });
