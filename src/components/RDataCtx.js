@@ -190,7 +190,7 @@ export function applyFilterData(fid, fArr) {
   const fltSet=dtFilters[fid];
   if (fltSet==null)
      throw new Error(`Error: cannot applyFilterData for "${fid}"`);
-  console.log(`Applying filter set for "${fid}": (${fArr})`);
+  //console.log(`Applying filter set for "${fid}": (${fArr})`);
   if (fid==='sex') {
     dtFilters.sex='';
     if (fArr.length===1)  {
@@ -241,7 +241,7 @@ export function updateCounts() {
          rd[i].fill(0);
      }
    let selXType=rGlobs.selXType;
-   console.log(`dtFilters.age set to: [${[...dtFilters.age].join(' ')}]`);
+   //console.log(`dtFilters.age set to: [${[...dtFilters.age].join(' ')}]`);
    for (let xt=0;xt<dtaXTypes.length;xt++) { //for each exp type
     let aXd=dtaXall[xt];
     if (!aXd || aXd.length===0) { //no data available (yet) for this experiment type

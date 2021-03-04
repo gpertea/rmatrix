@@ -51,23 +51,23 @@ function App() {
            style={{marginTop: "10px", border:"4px solid #f8f9fa"}}>
       <FltCtxProvider>
       <RDataProvider>
-        <div className="col bg-light overflow-auto my-sidebar">
+        <div className="col overflow-auto my-sidebar">
            <RefreshButton/>
           <div className="row">
              <FltMList id="dx" />
           </div>
           <div className="row"> 
-            <FltMList id="race" />
-          </div> 
-          <div className="row"> 
-            <FltMList id="sex" />
+            <FltMList id="sex" width="8rem"/>
           </div>
-          <div className="row"> 
-            <FltMList id="dset" />
+           <div className="row"> 
+            <FltMList id="race" width="10rem"/>
           </div>
           <div className="row"> 
             <FltMList id="age" />
           </div> 
+          <div className="row"> 
+            <FltMList id="dset" />
+          </div>
           {/*
           <div className="row"> 
             <FltMList id="age" />

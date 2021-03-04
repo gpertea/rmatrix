@@ -135,7 +135,8 @@ function FltMList( props ) {
     clearOnlyStates();
     $('#'+fid+' .lg-lst').find('.lg-sel').removeClass('lg-sel');
     //t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
-    $('#'+fid+' .lg-only').empty();
+    let p = $('#'+fid).find('.lg-only');
+    p.hide(); p.empty();
     if (upd) return;
     filterChanged();
   }
@@ -144,7 +145,7 @@ function FltMList( props ) {
     let p = t.parents('.lg-panel').find('.lg-only');
     let i = parseInt(t[0].id); //1-based index
     onlyData.push(i); 
-  
+    p.show();
     if (onlyData.length===1) { //first item added
       let to=p.append('<span class="lg-only-lb">Only</span>');
       to.children().on('click', function() {
@@ -170,7 +171,7 @@ function FltMList( props ) {
     if (onlyData.length>0) {
       p.children().remove('.lg-only-item'); //remove all items, re-add them
       onlyData.map( o => p.append('<span class="lg-only-item">'+fltData[0][o]+'</span>') );
-    } else p.empty();
+    } else { p.hide(); p.empty(); }
     onlyStates[0]=strPut(onlyStates[0], i-1 , '0');
     filterChanged();
   }
@@ -190,11 +191,9 @@ function FltMList( props ) {
     }
   });
 }
-
-
-   // --- render FltMList ---
+  // --- render FltMList ---
   return (
-       <div className="lg-panel" id={props.id}>
+       <div className="lg-panel" id={props.id} style={ props.width ? { width : props.width} : {} }>
         <div className="lg-title">{id2name[props.id]}
            <span className="float-right">
              <span className="lg-apply">Apply</span>

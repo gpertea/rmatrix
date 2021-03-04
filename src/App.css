@@ -22,7 +22,8 @@ body {
   width: 24rem;
   max-width: 24rem;
   padding:0.2rem 0.4rem;
-  border-right:1px solid #ddd;
+  background-color: #d8dadc;
+  border-right:1px solid #ccc;
   height: calc(100vh - 68px) !important;
   overflow-x:hidden !important;
 } 

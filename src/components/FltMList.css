@@ -1,16 +1,19 @@
 .lg-panel {
   position:relative;
+  background-color: #f6f8fa;
   width: 17rem;
   overflow: hidden;
-  padding:0.4rem 0 0.2rem 0;
-  margin: 0 auto;
+  padding:0;
+  margin: 1rem auto 0.2rem;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.2);
 }
 
 .lg-title {
 cursor: pointer;
-line-height:1.5rem;
+line-height:1.2rem;
 font-size: 1em;
 font-weight: bold;
+padding:3px;
 border-bottom:1px solid #eee;
 }
 
@@ -43,10 +46,12 @@ border-bottom:1px solid #eee;
   margin: 0px auto;
   height: auto;
   max-height: 7rem;
+  background-color:none;
   overflow-y: auto;
 }
 .lg-only {
-  padding:0;
+  padding:2px;
+  display:none;
   margin:0;
   overflow-wrap: normal;
   border-top: 1px solid #eee;
@@ -55,7 +60,12 @@ border-bottom:1px solid #eee;
 .lg-only-lb {
   font-weight: bold;
   color: #ed1848;
-  cursor:pointer;
+  cursor: pointer;
+  margin: 0 1px;
+  padding: 0 2px 0 1px;
+  border:1px solid #e2e4e6;
+  background-color: #e8eaec;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.2), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .lg-only-item {
@@ -73,20 +83,29 @@ border-bottom:1px solid #eee;
 
 .lg-apply {
   font-size: 90%;
-  font-weight: normal;
+  font-weight: bold;
   cursor: pointer;
-  padding: 0 3px 1px;
-  margin: 0 2rem 2px 4px;
-  color: #831624;
-  background-color: #fadbdb;
-  border:1px solid #fac7cb; 
-  border-radius: 4px;
+  margin: 0 2rem 2px 2px;
+  padding: 0 2px 1px 2px;
+  /*color: #bd0019;*/
+  color: #ed1848;
+  background-color: #e8eaec;
+  border:1px solid #e2e4e6;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.2), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  /* border:1px solid #fac7cb;  */
+  border-radius: 2px;
+}
+
+.lg-apply:hover {
+  background-color: #f6f8fa;
+  /* box-shadow: 2px 2px 1px grey; */
 }
 
 .lg-lst {
   padding: 0;
   padding-top: 4px;
   margin: 0 6px;
+  background-color: none;
 
   /* border-top: 1px solid  #ddd;
   border-bottom: 1px solid  #ddd; */
@@ -103,15 +122,15 @@ border-radius: 6px;
 }
 
 .lg-item.lg-sel {
-  color: white;
-  background-color: #ed1848;
+  font-weight:bold;
+  background-color: #f0d0d7;
 }
 
 .lg-count {
 margin-top: 2px;
 font-size: 85%;
 font-weight: bold;
-border: 1px solid #aaa;
+border: 1px solid #bbb;
 background: none;
 color: inherit;
 /* background-color: #ed1848; */
