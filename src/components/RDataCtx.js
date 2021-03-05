@@ -11,7 +11,7 @@ export const rGlobs={
 
 //export const dtaRaceIdx={ "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 };
 //export const dtaSexIdx={ "F":1, "M":2 };
-export const AGE_LAST_RANGE = 75;
+export const AGE_LAST_RANGE = 60;
 //export const dtaAgeRanges = [[-0.1], [0,12.9], [13,18.9],[19,35.9], [36,54.9], [55,74.9], [AGE_LAST_RANGE] ]; //all pre-defined age ranges
 
 export const mxMaxVal = 546;
@@ -29,14 +29,21 @@ export const dtaNames = {
     raceIdx : { "AA":1, "AS":2, "CAUC":3, "HISP":4, "Other":5 },
     sex : [ 'sex', "F", "M" ],
     sexIdx : { "F":1, "M":2 },
-    age: ['age', 'fetal', '0-12','13-18','19-35', '36-54', '55-74', '75+'], //push age range labels corresponding to dtaAgeRanges
-    ageRanges: [[-0.1], [0,12.9], [13,18.9],[19,35.9], [36,54.9], [55,74.9], [AGE_LAST_RANGE] ]
+    age: ['age', 'fetal', '0-1','1-10','11-19', '20-39', '40-59', '60+'], 
+    ageRanges: [[-0.1], [0,0.9], [1,10.9],[11,19.9], [20,39.9], [40,59.9], [AGE_LAST_RANGE] ]
 };
+/*
+dtaNames.dx  : array of dx names, dtaDx[0]='dx' followed by dtaDx[dx-code]="dx-name"
+dtaNames.dset : array of dataset names  dtaDSet[0]='dset' and dtaDSet[ds-code]="ds-name"
+dtaNames.dsetp : array of dataset names public flags dtaDSet[0]='dsetp' then dtaDSet[ds-code]=1 or 1
+dtaNames.dspub: ['dspub', 'restricted', 'public']
+dtaNames.reg : array of region names dtaReg[0]='reg' and dtaDSet[reg-code]="reg-name"
+*/
 
-//push allData.sdata arrays, i.e. samples w/metadata 
+
+//fetched allData.sdata arrays, i.e. samples w/metadata 
 // for ALL experiment types is loaded here:
 export const dtaXall = [  ]; 
-
 /*-------- 1st tier (directly fetched) -----
 dtaXall : array of arrays of experiment metadata (samples), one array of rows for each experiment type
    dtaXall[0] : RNASeq sample data  [           
@@ -47,11 +54,6 @@ dtaXall : array of arrays of experiment metadata (samples), one array of rows fo
       [sample_id, ds-code, dx-code, race, sex, age, reg-code],
       ... 
     ]
-dtaNames.dx  : array of dx names, dtaDx[0]='dx' followed by dtaDx[dx-code]="dx-name"
-dtaNames.dset : array of dataset names  dtaDSet[0]='dset' and dtaDSet[ds-code]="ds-name"
-dtaNames.dsetp : array of dataset names public flags dtaDSet[0]='dsetp' then dtaDSet[ds-code]=1 or 1
-dtaNames.dspub: ['dspub', 'restricted', 'public']
-dtaNames.reg : array of region names dtaReg[0]='reg' and dtaDSet[reg-code]="reg-name"
   
  --------  2nd tier (dynamic, filter-dependent sample counts) ---
  dtXd : has the dtaXall[selXType] sample data for samples that passed the filters!
@@ -71,8 +73,9 @@ dtaNames.reg : array of region names dtaReg[0]='reg' and dtaDSet[reg-code]="reg-
      dtnReg = [ total, num-w-reg-code-1, num-w-reg-code-2, ...] 
 */
 
-export const dtXs = []; //samples table for the current experiment type 
-                       //    as filtered with the dtf* filters
+export const dtXs = []; //a dynamic table with all experiment samples metadata (table) for the
+    //current experiment type AFTER filtering with the current dtFilters
+
 //-- dynamically updated COUNTS (depending on the filters):
 //-- except for dtCounts.reg, the other are counts for the currently targeted
 //   experiment type (selXType) for the specific category
@@ -275,10 +278,10 @@ export function updateCounts() {
           //else if (a<0) console.log(`for ${sid} age ${a} got ax=${ax}`);
           if (!dtFilters.age.has(ax)) continue;
         }
-        //update region counts for all exp types in the matrix
+        //update region counts for all exp types in the matrix!
         dtCounts.reg[rg-1][xt]++;
 
-        //only update phenotype counts for selXType 
+        //only update phenotype counts for current selXType 
         if (xt!==selXType) continue;
         if (ax===0)
             ax=age2RangeIdx(a);

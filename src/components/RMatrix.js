@@ -25,15 +25,14 @@ var setSelData=null;
 var isFirstRender=false;
 
 function RMatrix( props ) {
-    const [selXType, xdata, counts] = useRData();
+    const [selXType, xdata, counts] = useRData(); //[rGlobs.selXType, dtXs, dtCounts]
     const [fltUpdId, fltFlip] = useFltCtx(); //fltUpd is just a [fltId, fltFlip]
     isFirstRender=useFirstRender(); //only true for the first render!
-    console.log(`RMatrix rendering requested: fltUpdId=<${fltUpdId}> flip=${fltFlip}, data len=${xdata.length}`);
-    //const setSelDataFunc = useRSelUpdate();
+    //console.log(`RMatrix rendering requested: fltUpdId=<${fltUpdId}> flip=${fltFlip}, data len=${xdata.length}`);
     setSelData = useRSelUpdate();
 
     useEffect( () =>  { 
-        console.log('RMatrix: render requested due to RData update')
+        console.log(`RMatrix: render requested due to RData update (rebuildRMatrix=${rGlobs.rebuildRMatrix}`);
         if (rGlobs.rebuildRMatrix) {
               mxVals=[];
               numRegs=0;numXTypes=0;
@@ -47,7 +46,7 @@ function RMatrix( props ) {
         }, [fltFlip] );
 
 
-    if (xdata.length===0) return (<div>. . . L O A D I N G . . . </div>);
+    //if (cxdata.length===0) return (<div>. . . L O A D I N G . . . </div>);
  
     return (
         <>
@@ -295,11 +294,12 @@ function hoverCell(t, r, c, out) {
     if (t==null) {
       t=$('table#rxMatrix tr').eq(ridx+1).find('td').eq(cix-1);
     }
-    //if (t==null || t.html().trim().length===0) return;
     if (t==null) return;
-    t.css('font-weight','bold');
-    t.css('color', '#fff');
-    t.css('background-color', clHdrSelFg);
+    if (t.html().trim().length!==0) {
+      t.css('font-weight','bold');
+      t.css('color', '#fff');
+      t.css('background-color', clHdrSelFg);
+    }
     var th=t.siblings('th')
     selectTH(th);
     //th.css('font-weight', 'bold');

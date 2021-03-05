@@ -81,7 +81,6 @@ function FltMList( props ) {
       let jc=jqRender(fid, fltData, notifyUpdate);
       let li=jc.find('.lg-item').last();
       flDt.current.lHeight=Math.floor(li.position().top+li.outerHeight(true));
-      console.log(`>>>>>> Height for list ${fid}: ${flDt.current.lHeight}`);
       addHandlers(jc, flDt.current.lHeight); //adds scroll and collapse click handlers
       addApplyButton(jc);
       jqCreated[0]=true;
