@@ -40,7 +40,8 @@ function FltMList( props ) {
     appSt:[''], //appliedStates
     fltDta:[], //[fltNames, fltCounts, fltSet]
     jqCr: [false],
-    btnApp: [null]
+    btnApp: [null],
+    lHeight: 0 //calculated list height
   });
   const onlyData=flDt.current.onlyDt; //array with only selected indexes
   const onlyStates=flDt.current.onlySt; //changing/current selected states
@@ -78,7 +79,10 @@ function FltMList( props ) {
     if (!jqCreated[0]) {
       console.log(`FltMList ${fid} creating with counts: ${fltData[1]}`);
       let jc=jqRender(fid, fltData, notifyUpdate);
-      addClickHandler(jc);
+      let li=jc.find('.lg-item').last();
+      flDt.current.lHeight=Math.floor(li.position().top+li.outerHeight(true));
+      console.log(`>>>>>> Height for list ${fid}: ${flDt.current.lHeight}`);
+      addHandlers(jc, flDt.current.lHeight); //adds scroll and collapse click handlers
       addApplyButton(jc);
       jqCreated[0]=true;
     }
@@ -88,7 +92,7 @@ function FltMList( props ) {
 
     function jqUpdate() { //update values from mxVals
       if (fltData.length===0 || fltData[1].length<=1) return;
-      $('#'+fid+' .lg-lst').children().each( 
+      $('#'+fid+' .lg-scroller').children().each( 
         function (i, li) {
           var el= $(li).find('.lg-count');
           el.html(fltData[1][i+1]);
@@ -146,7 +150,7 @@ function FltMList( props ) {
 
   function deselectAll(upd) {
     clearOnlyStates();
-    $('#'+fid+' .lg-lst').find('.lg-sel').removeClass('lg-sel');
+    $('#'+fid+' .lg-scroller').find('.lg-sel').removeClass('lg-sel');
     //t.parents('.lg-panel').find('.lg-sel').removeClass('lg-sel'); //removeClass('lg-sel');
     let p = $('#'+fid).find('.lg-only');
     p.hide(); p.empty();
@@ -189,7 +193,30 @@ function FltMList( props ) {
     filterChanged();
   }
   
-  function addClickHandler(jc) {
+  function addHandlers(jc, lh) {
+    let jscroller=jc.find(' .lg-scroller');
+    scrollShader(jscroller, lh);
+    jscroller.on('scroll', (e) => scrollShader($(e.target), lh) );
+    jc.on('click', '.lg-title', function(e) {
+      var t = $(this);
+      var p = t.parents('.lg-panel').find('.lg-lst');
+      if(!t.hasClass('lg-collapsed')) {
+        p.collapse('hide');
+        t.addClass('lg-collapsed');
+        //t.removeClass('lg-b-shadow');
+        //t.find('.coll-glyph').html("&#x25BD;")
+        t.find('.coll-glyph').html(arrowDown);
+        //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
+      } else {
+        p.collapse('show');
+        t.removeClass('lg-collapsed');
+        scrollShader(p, lh);
+        //t.find('.coll-glyph').html("&#x25B3;")
+        t.find('.coll-glyph').html(arrowLeft)
+        //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
+      }
+    });
+
     jc.on('click', '.lg-item', function(e) {
       var t = $(this);
       if(!t.hasClass('lg-sel')) {
@@ -213,10 +240,12 @@ function FltMList( props ) {
              <span className="coll-glyph"></span>
            </span>
         </div>
-        <div className="collapse show lg-scroller lg-in-shadow">
-         <ul className="lg-lst">
-         </ul>
-        </div>
+         <ul className="collapse show lg-lst">
+           <div className="lg-scroller">
+           </div>
+           <div className="lg-topshade"></div>
+           <div className="lg-bottomshade"></div>
+          </ul>
         <div className="lg-only"></div>
        </div>
      )
@@ -227,7 +256,7 @@ function populateList(id, dta) {
   /* <li class="d-flex justify-content-between lg-item">
     First one <span class="badge-primary badge-pill lg-count">24</span>
     </li> */
-  $('#'+id+' .lg-lst').append(
+  $('#'+id+' .lg-scroller').append(
     $.map(dta[0], function(d,i) { 
        return i ? '<li class="d-flex justify-content-between lg-item" id="'+i+'">'+d+
          ' <span class="badge-primary badge-pill lg-count">'+dta[1][i]+'</span>'+
@@ -239,46 +268,29 @@ function jqRender(id, dta) {
   populateList(id, dta);
   let jc=$('#'+id);
   jc.find('.coll-glyph').html(arrowLeft);
-  jc.on('click', '.lg-title', function(e) {
-      var t = $(this);
-      var p = t.parents('.lg-panel').find('.lg-scroller');
-      if(!t.hasClass('lg-collapsed')) {
-        p.collapse('hide');
-        t.addClass('lg-collapsed');
-        t.removeClass('lg-b-shadow');
-        //t.find('.coll-glyph').html("&#x25BD;")
-        t.find('.coll-glyph').html(arrowDown);
-        //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
-      } else {
-        p.collapse('show');
-        t.removeClass('lg-collapsed');
-        scrollShader(p);
-        //t.find('.coll-glyph').html("&#x25B3;")
-        t.find('.coll-glyph').html(arrowLeft)
-        //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
-      }
-    });
-  let jscroller=$('#'+id+' .lg-scroller');
-  scrollShader(jscroller);
-  jscroller.on('scroll', (e) => scrollShader($(e.target)) );
   return jc;
 }
 
 
-function scrollShader(t) {
+function scrollShader(t, lh) {
   var y = t.scrollTop();
-  var p = t.parents('.lg-panel').find('.lg-title');
+  //var p = t.parents('.lg-panel').find('.lg-title');
   var l = t.parents('.lg-panel').find('.lg-lst');
   if (y>2) {
-     p.addClass('lg-b-shadow');
+     //p.addClass('lg-b-shadow');
+     l.find('.lg-topshade').show();
   }
   else {
-     p.removeClass('lg-b-shadow');
+     //p.removeClass('lg-b-shadow');
+     l.find('.lg-topshade').hide();
   }
-  if (y+t.innerHeight()>=l.outerHeight()) {
-    t.removeClass('lg-in-shadow');
+  console.log(`y=${y}+${t.innerHeight()} >= ? ${lh}`);
+  if (y+t.innerHeight()>=lh) {
+    //t.removeClass('lg-in-shadow');
+    l.find('.lg-bottomshade').hide();
   } else {
-    t.addClass('lg-in-shadow');
+    //t.addClass('lg-in-shadow');
+    l.find('.lg-bottomshade').show();
   }
 }
 

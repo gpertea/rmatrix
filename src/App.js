@@ -57,7 +57,7 @@ function App() {
              <FltMList id="dx" />
           </div>
           <div className="row"> 
-            <FltMList id="sex" width="8rem"/>
+            <FltMList id="sex" width="10rem"/>
           </div>
            <div className="row"> 
             <FltMList id="race" width="10rem"/>
@@ -89,10 +89,10 @@ function App() {
              <div className="col-4">
              </div>
               <div className="col-3">
-               <button class="bg-white btn shadow-sm">Download</button>
+               <button className="bg-white btn shadow-sm"><b>Download &#x02228;</b></button>
               </div>
-              <div className="col-2">
-               <button class="bg-white btn shadow-sm">Explore</button>
+              <div className="col-3">
+               <button className="bg-white btn shadow-sm"><b>Explore &#x021D2;</b></button>
               </div>
              </div>
            </RSelProvider>

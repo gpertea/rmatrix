@@ -12,7 +12,8 @@ function RSelTotal() {
      }
    }
   return (<div>
-        <span style={{fontSize:"1rem"}}><b>Total selected samples:</b></span><span class="sel-total">{total}</span>
+        <span style={{fontSize:"1rem"}}><b>Total selected samples:</b></span>
+        <span className="sel-total">{total}</span>
         </div>
   )
 }
