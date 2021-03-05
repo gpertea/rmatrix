@@ -196,7 +196,7 @@ function jqRender(xtypes, rdata) {
         updateRSel();
       } else { // region header
         let rix=t.parent().index();
-        console.log(`clicked region header rix ${rix}, selcol=${selcol}`);
+        //console.log(`clicked region header rix ${rix}, selcol=${selcol}`);
         if (selcol>0) {
           if (selregs[rix]) deselectCell(null, rix, selcol);
                          else selectCell(null, rix, selcol);
@@ -207,7 +207,8 @@ function jqRender(xtypes, rdata) {
 }
 
 function hoverCell(t, r, c, out) {
-    var obg=t.prop('obg');
+  if (selregs[r] && selcol===c && t.html().trim().length!==0) return;
+  var obg=t.prop('obg');
     if (out) {
        if (obg) {
           t.css('background-color', obg);
@@ -241,8 +242,8 @@ function hoverCell(t, r, c, out) {
     t.siblings('td').each(function() {
         var td=$(this);
         var c=td.index();
-        if (c!==selcol || !selregs[rix])
-          hoverCell(td, rix, c, out);
+        //if (c!==selcol) // || !selregs[rix])
+        hoverCell(td, rix, c, out);
     });
     if (selregs[rix]) selectTH(t.siblings('th'))
     else hoverTH(t.siblings('th'), out) //regular, not selected region
@@ -252,11 +253,11 @@ function hoverCell(t, r, c, out) {
       $('#rxMatrix td:nth-child(' + (cix+1) + ')').each( function() {
           var td=$(this);
           var r=td.parent().index();
-          if (cix!==selcol || !selregs[r])
-            hoverCell(td, r, cix, out);
+          //if (cix!==selcol) //|| !selregs[r])
+          hoverCell(td, r, cix, out);
       });
-      if (cix!==selcol || !selregs[rix])
-        hoverCell(t, t.parent().index(), cix, out);
+      //if (cix!==selcol) //|| !selregs[rix])
+      hoverCell(t, rix, cix, out);
       //highlight column
       var ch=$('#rxMatrix th:nth-child(' + (cix+1) + ') > div > span');
       if (cix===selcol) {
