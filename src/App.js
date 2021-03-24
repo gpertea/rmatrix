@@ -57,7 +57,7 @@ function App() {
              <FltMList id="dx" />
           </div>
           <div className="row"> 
-            <FltMList id="sex" width="10rem"/>
+            <FltMList id="sex" type="toggle"/>
           </div>
            <div className="row"> 
             <FltMList id="race" width="10rem"/>

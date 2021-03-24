@@ -57,6 +57,7 @@ function FltMList( props ) {
   const notifyUpdate = useFltCtxUpdate(); 
   const [fltUpdId, fltFlip] = useFltCtx(); //external update, should update these counts
   const fid=props.id;
+  const isToggle=(props.type==="toggle");
 
   //const isFirstRender=useFirstRender();
 
@@ -72,25 +73,38 @@ function FltMList( props ) {
   }
 
   useEffect(()=> {
-    console.log(`FltMList ${fid}: render with fltData len=${fltData[1].length}, already created=${jqCreated}`);
+    //console.log(`FltMList ${fid}: render with fltData len=${fltData[1].length}, already created=${jqCreated}`);
     //if (jqCreated) 
     //  console.log(`FltMList ${fid} counts: ${fltData[1]}`);
     if (fltData.length===0 || fltData[1].length===1) return;
     if (!jqCreated[0]) {
-      console.log(`FltMList ${fid} creating with counts: ${fltData[1]}`);
-      let jc=jqRender(fid, fltData, notifyUpdate);
+      //console.log(`FltMList ${fid} creating with counts: ${fltData[1]}`);
+      let jc=jqRender(fid, fltData, isToggle) //, notifyUpdate);
+      jqCreated[0]=true;
+      if (isToggle) {
+        console.log(`FltMList toggle ${fid} creating with counts: ${fltData[1]}`);
+        addToggleHandlers(jc); //also adds the Apply button
+        return 
+      }
       let li=jc.find('.lg-item').last();
       flDt.current.lHeight=Math.floor(li.position().top+li.outerHeight(true));
       addHandlers(jc, flDt.current.lHeight); //adds scroll and collapse click handlers
       addApplyButton(jc);
-      jqCreated[0]=true;
     }
   } );
 
-  useEffect( () =>  { 
+  useEffect( () =>  {
 
     function jqUpdate() { //update values from mxVals
       if (fltData.length===0 || fltData[1].length<=1) return;
+      if (isToggle) {
+        $('#'+fid+' .lg-toggler').children().each( 
+          function (i, li) {
+            var el= $(li).find('.lg-count');
+            el.html(fltData[1][i+1]);
+         });
+          return;
+      }
       $('#'+fid+' .lg-scroller').children().each( 
         function (i, li) {
           var el= $(li).find('.lg-count');
@@ -102,19 +116,8 @@ function FltMList( props ) {
     //-- no need to update if the update was due to self
     if (fid===fltUpdId) return; //self-inflicted update, don't change the counts
     jqUpdate();  //update counts only  
-  }, [fltFlip, fid, fltUpdId, fltData] );
-
-  function addApplyButton(jc) {
-    btnApply[0] = jc.find('.lg-apply');
-    btnApply[0].on('click', function(e) {
-      //actually apply the changes
-       $(this).hide();
-       applyFilter(); //onlyStates string is applied
-       e.stopPropagation();
-    });
-    btnApply[0].hide();
-  }
-  
+  }, [fltFlip, fid, fltUpdId, fltData, isToggle] );
+ 
   function clearOnlyStates() {
     onlyStates[0]='';
     fltData[0].slice(1).forEach( ()  => onlyStates[0] += '0' );
@@ -157,7 +160,18 @@ function FltMList( props ) {
     filterChanged();
   }
 
-  function addOnlyItem(t) {
+
+ function toggleItem(t, tsel) {
+   let i = parseInt(t[0].id); //1-based index
+   clearOnlyStates();
+   if (tsel) {
+     onlyData.push(i);
+     onlyStates[0]=strPut(onlyStates[0], i-1 , '1');
+   }
+   filterChanged();
+ }
+
+ function addOnlyItem(t) {
     let p = t.parents('.lg-panel').find('.lg-only');
     let i = parseInt(t[0].id); //1-based index
     onlyData.push(i); 
@@ -178,7 +192,7 @@ function FltMList( props ) {
     filterChanged();
   }
   
-  function removeOnlyItem(t) {
+ function removeOnlyItem(t) {
     let p = t.parents('.lg-panel').find('.lg-only');
     let i = parseInt(t[0].id); //1-based index
     //remove item with value i from onlyData
@@ -190,9 +204,20 @@ function FltMList( props ) {
     } else { p.hide(); p.empty(); }
     onlyStates[0]=strPut(onlyStates[0], i-1 , '0');
     filterChanged();
-  }
+ }
+
+ function addApplyButton(jc) {
+    btnApply[0] = jc.find('.lg-apply');
+    btnApply[0].on('click', function(e) {
+      //actually apply the changes
+       $(this).hide();
+       applyFilter(); //onlyStates string is applied
+       e.stopPropagation();
+    });
+    btnApply[0].hide();
+ }
   
-  function addHandlers(jc, lh) {
+ function addHandlers(jc, lh) {
     let jscroller=jc.find(' .lg-scroller');
     scrollShader(jscroller, lh);
     jscroller.on('scroll', (e) => scrollShader($(e.target), lh) );
@@ -229,7 +254,34 @@ function FltMList( props ) {
       removeOnlyItem(t);
     }
   });
-}
+ }
+
+ function addToggleHandlers(jc) {
+  jc.on('click', '.lg-item', function(e) {
+    var t = $(this);
+    if(!t.hasClass('lg-sel')) {
+    //var p=$this.parents('.panel').find('.panel-body');
+      t.siblings().removeClass('lg-sel');
+      t.addClass('lg-sel');
+      //$this.find('b').removeClass('bi-chevron-up').addClass('bi-chevron-down');
+      toggleItem(t, true);
+    } else {
+      t.removeClass('lg-sel');
+      toggleItem(t, false);
+      //$this.find('b').removeClass('bi-chevron-down').addClass('bi-chevron-up');
+    }
+   //TODO !
+  });
+  btnApply[0] = jc.find('.lg-apply');
+  btnApply[0].on('click', function(e) {
+    //actually apply the changes
+     $(this).hide();
+     applyFilter(); //onlyStates string is applied
+     e.stopPropagation();
+  });
+  btnApply[0].hide();
+
+ }
   // --- render FltMList ---
   return (
        <div className="lg-panel" id={props.id} style={ props.width ? { width : props.width} : {} }>
@@ -239,22 +291,32 @@ function FltMList( props ) {
              <span className="coll-glyph"></span>
            </span>
         </div>
-         <ul className="collapse show lg-lst">
-           <div className="lg-scroller">
-           </div>
+          { isToggle ? <ul className="lg-toggler">  </ul> 
+          : 
+          <ul className="collapse show lg-lst">
+           <div className="lg-scroller"></div>
            <div className="lg-topshade"></div>
            <div className="lg-bottomshade"></div>
-          </ul>
-        <div className="lg-only"></div>
+          </ul> }
+        {!isToggle && <div className="lg-only"> </div>}
        </div>
      )
 }
 
-function populateList(id, dta) {
+function populateList(id, dta, isToggle) {
   //dta is [fltNames, fltCounts ]
   /* <li class="d-flex justify-content-between lg-item">
     First one <span class="badge-primary badge-pill lg-count">24</span>
     </li> */
+  if (isToggle) {
+    $('#'+id+' .lg-toggler').append(
+      $.map(dta[0], function(d,i) { 
+         return i ? '<li class="justify-content-between lg-item" id="'+i+'">'+d+
+           ' <span class="badge-primary badge-pill lg-count">'+dta[1][i]+'</span>'+
+           "</li>\n" : '';
+      }).join(''));
+    return
+  }
   $('#'+id+' .lg-scroller').append(
     $.map(dta[0], function(d,i) { 
        return i ? '<li class="d-flex justify-content-between lg-item" id="'+i+'">'+d+
@@ -263,10 +325,11 @@ function populateList(id, dta) {
     }).join(''));
 }
 
-function jqRender(id, dta) {
-  populateList(id, dta);
+function jqRender(id, dta, isToggle) {
+  populateList(id, dta, isToggle);
   let jc=$('#'+id);
-  jc.find('.coll-glyph').html(arrowLeft);
+  if (!isToggle)
+    jc.find('.coll-glyph').html(arrowLeft);
   return jc;
 }
 
@@ -283,7 +346,7 @@ function scrollShader(t, lh) {
      //p.removeClass('lg-b-shadow');
      l.find('.lg-topshade').hide();
   }
-  console.log(`y=${y}+${t.innerHeight()} >= ? ${lh}`);
+  //console.log(`y=${y}+${t.innerHeight()} >= ? ${lh}`);
   if (y+t.innerHeight()>=lh) {
     //t.removeClass('lg-in-shadow');
     l.find('.lg-bottomshade').hide();

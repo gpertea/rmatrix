@@ -274,7 +274,7 @@ export function updateCounts() {
         let ax=0;
         if (dtFilters.age.size) { //any age filter set?
           ax=age2RangeIdx(a);
-          if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age"+rg);
+          if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age "+rg);
           //else if (a<0) console.log(`for ${sid} age ${a} got ax=${ax}`);
           if (!dtFilters.age.has(ax)) continue;
         }
