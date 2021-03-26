@@ -77,12 +77,12 @@ padding:3px;
 
 .lg-toggler {
   position:relative;
-  background-color: #f2f2f4;
+  background-color: #fff;
   z-index:10;
   padding:2px;
   margin:0;
   overflow-wrap: normal;
-  border-top: 1px solid green;
+  /* border-top: 1px solid green; */
 }
 
 .lg-item {
@@ -107,12 +107,18 @@ border-radius: 4px;
   display: inline;
 }
 
+.lg-toggler .lg-item.lg-sel {
+  margin: 2px 2px;
+  color: white;
+  background-color: #ed1848;
+  border-radius: 6px;
+}
 
 .lg-count {
 margin-top: 2px;
 font-size: 85%;
 font-weight: bold;
-border: 1px solid #bbb;
+/* border: 1px solid #bbb; */
 background: none;
 color: inherit;
 /* background-color: #ed1848; */

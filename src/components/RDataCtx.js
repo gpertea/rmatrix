@@ -216,7 +216,7 @@ export function applyFilterData(fid, fArr) {
 function age2RangeIdx(a) { //age is converted in a 1-based index into a dtaAge label index
   if (a<0) return 1; //fetal
   let len=dtaAgeRanges.length;
-  if (a>=75) return len;
+  if (a>=AGE_LAST_RANGE) return len;
   --len;
   for (let i=1;i<len;++i) {
     let ar=dtaAgeRanges[i];
@@ -265,18 +265,36 @@ export function updateCounts() {
 
     for (let i=0;i<len;++i) { //for each sample data row
         const [sid, d, dx, r, s, a, rg] = aXd[i];
-        if (dtFilters.dx.size && !dtFilters.dx.has(dx)) continue;
-        if (dtFilters.race.size && !dtFilters.race.has(r)) continue;
-        if (dtFilters.dset.size && !dtFilters.dset.has(d)) continue;
-        if (dtFilters.dspub.size && !dtFilters.dspub.has(dsetIdx[d])) continue;
-        if (dtFilters.sex && dtFilters.sex!==s) continue;
+        if (dtFilters.dx.size && !dtFilters.dx.has(dx)) {
+          if (xt===selXType) dtCounts.dx[dx]++;
+          continue;
+        }
+        if (dtFilters.race.size && !dtFilters.race.has(r)) {
+          if (xt===selXType) dtCounts.race[dtaRaceIdx[r]]++;
+          continue;
+        }
+        if (dtFilters.dset.size && !dtFilters.dset.has(d)) {
+          if (xt===selXType) dtCounts.dset[d]++;
+          continue;
+        }
+        if (dtFilters.dspub.size && !dtFilters.dspub.has(dsetIdx[d])) {
+          if (xt===selXType) dtCounts.dspub[dsetIdx[d]]++;
+          continue;
+        }
+        if (dtFilters.sex && dtFilters.sex!==s) {
+          if (xt===selXType) dtCounts.sex[dtaSexIdx[s]]++; //still shows the counts!
+          continue;
+        }
         //TODO: implement public/restricted dataset filter?
         let ax=0;
         if (dtFilters.age.size) { //any age filter set?
           ax=age2RangeIdx(a);
-          if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age "+rg);
+          if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age "+a);
           //else if (a<0) console.log(`for ${sid} age ${a} got ax=${ax}`);
-          if (!dtFilters.age.has(ax)) continue;
+          if (!dtFilters.age.has(ax)) {
+            if (xt===selXType) dtCounts.age[ax]++;
+            continue;
+          }
         }
         //update region counts for all exp types in the matrix!
         dtCounts.reg[rg-1][xt]++;
@@ -285,10 +303,10 @@ export function updateCounts() {
         if (xt!==selXType) continue;
         if (ax===0)
             ax=age2RangeIdx(a);
-        if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age"+rg);
+        if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age "+a);
             else dtCounts.age[ax]++;
-        let rix=dtaRaceIdx[r];
-        dtCounts.race[rix]++;
+        
+        dtCounts.race[dtaRaceIdx[r]]++;
         //if (rix>0) console.log(`incremented counts for race ${r}, rix=${rix}`);
         dtCounts.sex[dtaSexIdx[s]]++;
         dtCounts.dx[dx]++;
@@ -296,7 +314,7 @@ export function updateCounts() {
         dtCounts.dspub[dsetIdx[d]]++;
         dtXs.push([sid, d, dx, r, s, a, rg]); //metadata for each sample that passed
     }
-    console.log(`dtCounts.race is: ${dtCounts.race}`);
+    //console.log(`dtCounts.race is: ${dtCounts.race}`);
   }
     //return [selXType, dtXs, dtCounts ] 
 }
