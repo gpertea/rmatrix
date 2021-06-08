@@ -253,12 +253,14 @@ export function updateCounts() {
         continue;
       }
       // generate some random region counts and exit
+      /*
       for (let rg=0;rg<dtaNames.reg.length-1;++rg) {
         let v=Math.floor(Math.random() * mxMaxVal);
         if (v%3 === 0) v=0;
         //fill the column with random values
         dtCounts.reg[rg][xt]=v;
       }
+      */
       continue;
     }
     const len=aXd.length;
@@ -266,23 +268,23 @@ export function updateCounts() {
     for (let i=0;i<len;++i) { //for each sample data row
         const [sid, d, dx, r, s, a, rg] = aXd[i];
         if (dtFilters.dx.size && !dtFilters.dx.has(dx)) {
-          if (xt===selXType) dtCounts.dx[dx]++;
+          //if (xt===selXType) dtCounts.dx[dx]++;
           continue;
         }
         if (dtFilters.race.size && !dtFilters.race.has(r)) {
-          if (xt===selXType) dtCounts.race[dtaRaceIdx[r]]++;
+          //if (xt===selXType) dtCounts.race[dtaRaceIdx[r]]++;
           continue;
         }
         if (dtFilters.dset.size && !dtFilters.dset.has(d)) {
-          if (xt===selXType) dtCounts.dset[d]++;
+          //if (xt===selXType) dtCounts.dset[d]++;
           continue;
         }
         if (dtFilters.dspub.size && !dtFilters.dspub.has(dsetIdx[d])) {
-          if (xt===selXType) dtCounts.dspub[dsetIdx[d]]++;
+          //if (xt===selXType) dtCounts.dspub[dsetIdx[d]]++;
           continue;
         }
         if (dtFilters.sex && dtFilters.sex!==s) {
-          if (xt===selXType) dtCounts.sex[dtaSexIdx[s]]++; //still shows the counts!
+          //if (xt===selXType) dtCounts.sex[dtaSexIdx[s]]++; //still shows the counts!
           continue;
         }
         //TODO: implement public/restricted dataset filter?
@@ -292,7 +294,7 @@ export function updateCounts() {
           if (ax===0) console.log(">>>>>>> WARNING: could not get an age range index from age "+a);
           //else if (a<0) console.log(`for ${sid} age ${a} got ax=${ax}`);
           if (!dtFilters.age.has(ax)) {
-            if (xt===selXType) dtCounts.age[ax]++;
+            //if (xt===selXType) dtCounts.age[ax]++;
             continue;
           }
         }

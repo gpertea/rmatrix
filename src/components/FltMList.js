@@ -114,7 +114,7 @@ function FltMList( props ) {
   
     //if (isFirstRender) return;
     //-- no need to update if the update was due to self
-    if (fid===fltUpdId) return; //self-inflicted update, don't change the counts
+    //if (fid===fltUpdId) return; //self-inflicted update, don't change the counts?
     jqUpdate();  //update counts only  
   }, [fltFlip, fid, fltUpdId, fltData, isToggle] );
  

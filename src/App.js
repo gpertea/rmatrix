@@ -31,13 +31,15 @@ function RefreshButton() {
   const notifyFltUpdate=useFltCtxUpdate();
 
   function ClickUpdate() {
-    updateCounts();
+    /* updateCounts();
     console.log('sending notifyFltUpdate');
     notifyFltUpdate('test'); 
+    */
+    window.location.reload(false);
   }
 
   return (<div className="row justify-content-md-center" style={{height: "2em"}}> 
-    <button onClick={ClickUpdate}>Force Update</button>
+    <button onClick={ClickUpdate}>Clear</button>
     </div>)
 }
 
@@ -80,20 +82,26 @@ function App() {
          
           <RSelProvider>
              <RMatrix />
-             <div className="row" style={{paddingTop: "1em"}} >
-               <div className="col">
-                <RSelTotal />
+             <div className="row" style={{paddingTop: "0.4rem" }} >
+               <div className="col-2">
+               </div>
+               <div className="col-8 checkout-area">
+                 <div className="row" style={{padding: "0.4rem 4rem 0.8rem 6.2rem" }} > <RSelTotal /> </div>
+                 <div className="row" >
+                   <div className="col-2">
+                   </div>
+                   <div className="col-5" style={{ paddingLeft: "1.8rem"}}>
+                     <button className="btn checkout-btn btn-light"><b>Download &#x02228;</b></button>
+                   </div>
+                  <div className="col-4">
+                    <button className="btn checkout-btn btn-light" style={{ width: "7.6rem"}} ><b>Explore &#x021D2;</b></button>
+                  </div>
+               </div>
+               </div>
+               <div className="col-2">
                </div>
              </div> 
              <div className="row" style={{paddingTop: "1em"}} >
-             <div className="col-4">
-             </div>
-              <div className="col-3">
-               <button className="bg-white btn shadow-sm"><b>Download &#x02228;</b></button>
-              </div>
-              <div className="col-3">
-               <button className="bg-white btn shadow-sm"><b>Explore &#x021D2;</b></button>
-              </div>
              </div>
            </RSelProvider>
 
